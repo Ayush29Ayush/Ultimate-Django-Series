@@ -23,4 +23,5 @@ E) 2 essential debugging techniques
 3. Install Django using: pip install django
 4. Store requirements in requirements.txt using the command: pip freeze > requirements.txt
 5. Type "django-admin" to know all the commands we can use in django.
-6. Type "django-admin startproject storefront . " to create a project.
+6. Type "django-admin startproject storefront . " to create a project named storefront.
+7. Type "python manage.py startapp playground" to create a new app named playground.
