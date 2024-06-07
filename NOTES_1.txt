@@ -1,0 +1,26 @@
+#! SECTION - 1
+A) Introduction to Django
+B) Fundamentals of webdev
+C) Setting up development environment
+D) First Django Project
+E) 2 essential debugging techniques
+
+#? A. Introduction to Django
+1. It is a batteries included framework which comes with functionalities liek admin site, object-relation mapping (ORM), template system, authentication system, caching, and many more.
+
+#? B. Fundamentals of webdev
+1. Frontend is the client responsible for the user interface and data visualization of the website. Backend is the server responsible for the database, security, caching, and user authentication. 
+2. The website has a URL i.e Uniform Resource Locator.  
+3. When the url is typed in the browser, it is called as a request. That request is sent to the server. It uses the http protocol.
+4. The response of the server is called as a response.
+5. The response is sent back to the browser. The response can be in form of HTML, JSON, XML, etc.
+6. We have front-end client side frameworks like Angular, React, Vue, etc. and backend server side frameworks like Django, Flask, etc.
+7. We send the data in the form of API i.e Application Programming Interface.
+
+#? C. Setting up development environment
+1. Create a virtual environment using the command: python -m venv venv
+2. Activate the virtual environment using: source venv/bin/activate
+3. Install Django using: pip install django
+4. Store requirements in requirements.txt using the command: pip freeze > requirements.txt
+5. Type "django-admin" to know all the commands we can use in django.
+6. Type "django-admin startproject storefront . " to create a project.
