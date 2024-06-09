@@ -32,9 +32,7 @@ INTERNAL_IPS = [
     'localhost',
 ]
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'playground',
     'debug_toolbar',
+    'store',
+    'tags',
 ]
 
 MIDDLEWARE = [
