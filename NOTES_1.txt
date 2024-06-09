@@ -194,7 +194,8 @@ class Promotion(models.Model):
     discount = models.FloatField()
     # product_set is be named as products when related_name is set to 'products
 
-    
+
+# Product can have many promotions. Product is the parent class and Promotion is the child class.
 class Product(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
