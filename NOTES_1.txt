@@ -84,6 +84,7 @@ E) 2 essential debugging techniques
 
 
 #! SECTION - 2
+Refer => "https://docs.djangoproject.com/en/5.0/ref/models/fields/"
 A) Data Models
 B) Build e-commerce data Models
 C) Organizing models in apps
@@ -114,3 +115,74 @@ b) OrderItem
 4. We will have 2 apps, "store" and "tags".
 5. Type "python manage.py startapp store" and "python manage.py startapp tags" in the terminal.
 6. Add these apps in the INSTALLED_APPS in settings.py
+
+#! CHOICE FIELDS - If a mapping is given, the key element is the actual value to be set on the model, and the second element is the human readable name.
+#? Method - 1
+"
+class Customer(models.Model):
+    MEMBERSHIP_CHOICES = [
+        ("B", "Bronze"),
+        ("S", "Silver"),
+        ("G", "Gold"),
+    ]
+
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=255)
+    birth_date = models.DateField(null=True)
+    membership = models.CharField(
+        max_length=1,
+        choices=MEMBERSHIP_CHOICES,
+        default="B",
+    )
+"
+#? Method - 2  MORE ELEGANT
+"
+class Customer(models.Model):
+    MEMBERSHIP_BRONZE = "B"
+    MEMBERSHIP_SILVER = "S"
+    MEMBERSHIP_GOLD = "G"
+
+    MEMBERSHIP_CHOICES = [
+        (MEMBERSHIP_BRONZE, "Bronze"),
+        (MEMBERSHIP_SILVER, "Silver"),
+        (MEMBERSHIP_GOLD, "Gold"),
+    ]
+
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=255)
+    birth_date = models.DateField(null=True)
+    membership = models.CharField(
+        max_length=1,
+        choices=MEMBERSHIP_CHOICES,
+        default=MEMBERSHIP_BRONZE,
+    )
+"
+
+#! README: The primary difference between using a OneToOneField and a ForeignKey in Django models is the nature of the relationship they define between the two models.
+OneToOneField
+A OneToOneField creates a one-to-one relationship between two models. This means that each instance of the referenced model can be related to exactly one instance of the model that contains the OneToOneField, and vice versa. It is a special case of a foreign key with unique constraints.
+
+ForeignKey
+A ForeignKey creates a one-to-many relationship between two models. This means that each instance of the referenced model can be related to multiple instances of the model that contains the ForeignKey.
+
+#! Defining One-to-one Relationships 
+# Here, the Customer is the parent class and the Address is the child class.
+# Here we want that each customer has only one address.
+"
+class Address(models.Model):
+    street = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    customer = models.OneToOneField(Customer, on_delete=models.CASCADE, primary_key=True)
+"
+
+#! Defining One-to-many Relationships
+"
+class Address(models.Model):
+    street = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+"
