@@ -80,3 +80,37 @@ E) 2 essential debugging techniques
 18. You may also add DEBUG_TOOLBAR_PANELS in settings.py
 19. Your template code should have html tag with body. Them only the django-debug-toolbar will be visible.
 19. Refer "https://django-debug-toolbar.readthedocs.io/en/latest/installation.html" and "https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html"
+
+
+
+#! SECTION - 2
+A) Data Models
+B) Build e-commerce data Models
+C) Organizing models in apps
+D) Coding Model classes
+"
+Creating Models 
+Choice Fields
+Defining One-to-one and Many-to-one Relationships 
+Resolving Circular Relationships
+Generic Relationships
+"
+
+1. We will have a "STORE" which will have models like "Product", "Collection", "Cart", "CartItem", "Order", "OrderItem", "Customer". This is MONOLITHIC i.e all the fields in one single model. This gets complex as we add more features.
+2. To solve this, we will break it to various small apps like "PRODUCTS", "COLLECTIONS", "CARTS", "ORDERS", "CUSTOMERS". This is ORGANIZING MODELS in apps.
+#! PRODUCTS
+a) Product
+b) Collection
+c) Tag 
+#! CUSTOMERS
+a) Customer
+#! CARTS
+a) Cart
+b) CartItem
+#! ORDERS
+a) Order
+b) OrderItem
+3. But this approach too is not scalable as each model will be dependent on other models. So we will use "Django ORM".
+4. We will have 2 apps, "store" and "tags".
+5. Type "python manage.py startapp store" and "python manage.py startapp tags" in the terminal.
+6. Add these apps in the INSTALLED_APPS in settings.py
