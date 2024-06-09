@@ -25,3 +25,58 @@ E) 2 essential debugging techniques
 5. Type "django-admin" to know all the commands we can use in django.
 6. Type "django-admin startproject storefront . " to create a project named storefront.
 7. Type "python manage.py startapp playground" to create a new app named playground.
+
+#? D. First Django Project and App
+1. Create a view named say_hello in views.py
+2. Create a urls.py file in apps directory and add the url configuration to urls.py of project's directory.
+3. Create a template in templates directory which should be located in the apps directory.
+
+#? E. 2 essential debugging techniques
+# TODO Attempt to debug Django applications in VS code
+1. Debugging Django Applications in VS code
+2. Click the "Debug" button in the VS code. 
+3. Now click on the "create a launch.json" file.
+4. Select python debugger and then django debugger. 
+5. Add this code
+"
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Django",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "runserver",
+                "9000"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}\\Ultimate Django Series 1\\manage.py"
+        }
+    ]
+}
+"
+6. Now set a breakpoint in the view code.
+7. Use F10 to step over to the next line of code. You can see all the debugger options on the top of the code screen.
+8. Keep a track of the locals and globals in the debugger.
+#! IMPORTANT
+9. Add the variable you want to keep track on in the "WATCH" tab of the debugger. Just click the "+" button in the "WATCH" tab.
+10. Use the "STEP INTO" button i.e the F11 button to step into the function code.
+11. Use the "STEP OUT" button i.e the F12 button to step out of the function code.
+
+#! IMPORTANT
+12. You can run your django app without typing python manage.py runserver by using "Ctrl + F5". This will run the django app in the background without the debugger.
+
+# TODO -> Use django-debug-toolbar to debug Django applications
+13. Install django-debug-toolbar using: pip install django-debug-toolbar
+14. Add it to INSTALLED_APPS in settings.py
+15. Add it to MIDDLEWARE in settings.py
+16. Add the urls.py to project's urls.py
+17. Add INTERNAL_IPS in settings.py
+18. You may also add DEBUG_TOOLBAR_PANELS in settings.py
+19. Your template code should have html tag with body. Them only the django-debug-toolbar will be visible.
+19. Refer "https://django-debug-toolbar.readthedocs.io/en/latest/installation.html" and "https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html"
