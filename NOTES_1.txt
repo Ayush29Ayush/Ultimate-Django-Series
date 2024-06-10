@@ -81,7 +81,7 @@ E) 2 essential debugging techniques
 19. Your template code should have html tag with body. Them only the django-debug-toolbar will be visible.
 19. Refer "https://django-debug-toolbar.readthedocs.io/en/latest/installation.html" and "https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html"
 
-
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #! SECTION - 2
 Refer => "https://docs.djangoproject.com/en/5.0/ref/models/fields/"
@@ -262,11 +262,10 @@ It requires two additional fields: content_type and object_id.
 content_type is a ForeignKey to the ContentType model.
 object_id is a field that stores the primary key of the related object.
 GenericForeignKey does not create a database-level constraint but works at the ORM level.
------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------
 Creating a LikedItem Instance:
 
 Suppose you have a Post model and a Comment model, and you want users to be able to like both posts and comments.
-
 "
 from myapp.models import Post, Comment
 from django.contrib.contenttypes.models import ContentType
@@ -294,3 +293,44 @@ liked_items = LikedItem.objects.filter(user=user)
 for item in liked_items:
     print(item.content_object)  # This will print the related object (post or comment)
 "
+--------------------------------------------------------------------------------------------------------------------
+#TODO => Objects
+Objects: In the context of Django's ORM, objects refers to the manager for model classes, which provides methods to query the database and return multiple records.
+When you call methods like Model.objects.all(), Model.objects.filter(), or Model.objects.get(), you're using the objects manager to perform database operations and retrieve records.
+These methods return querysets, which can represent multiple records from the database.
+#TODO => Instances
+Instance: An instance refers to a single record of a model. When you create or retrieve a single record from the database, that record is an instance of the model class.
+For example, when you create a new record with Model.objects.create(...) or retrieve a single record with Model.objects.get(...), you are working with an instance of that model.
+#! NOTE -> In short, objects means all the records and instance means a single record of a model.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#! SECTION - 3
+
+A) Creating migrations
+B) Running migrations
+C) Reversing migrations
+D) Populating the database
+
+#* Press "Ctrl + T" to open "Go to symbol in workspace" and type the word you want to find and go that file.
+
+
+1. Database Engines => SQLite, MySQL, PostgreSQL, MariaDB, Oracle and MS SQL Server. SQLite is used be default and MySQL, PostgreSQL are most widely used in production.
+2. We create migration files by using the command: python manage.py makemigrations
+3. We run migrations by using the command: python manage.py migrate
+4. We have added a "SLUG" field to the product model. It is used to create a URL for the product which is optimized for SEO.
+
+#! Key Points about the Meta Subclass in Django Models
+#* Purpose:
+The Meta subclass is used to define metadata for the Django model, influencing how it interacts with the database, behaves in queries, and is displayed in the Django admin interface.
+
+#* Common Options:
+* db_table: Specifies the name of the database table for the model. If not provided, Django uses a default name.
+* ordering: Defines the default ordering for querysets. It can be a single field or a list of fields.
+* verbose_name and verbose_name_plural: Specifies human-readable names for the model in singular and plural forms.
+* abstract: If set to True, the model becomes an abstract base class and no database table is created for it.
+* permissions: Defines custom permissions for the model.
+* index_together: Specifies a list of field names that should be indexed together.
+* index: Specifies that the model should be indexed in the database.
+* unique_together: Specifies a list of field names that should be unique together.
+
+#! NOTE --> Use "git reset --hard HEAD~1" to revert the last commit
