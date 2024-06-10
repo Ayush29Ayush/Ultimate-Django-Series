@@ -9,7 +9,9 @@ class Promotion(models.Model):
 
 class Collection(models.Model):
     title = models.CharField(max_length=255)
-    featured_product = models.ForeignKey("Product", on_delete=models.SET_NULL, null=True, related_name="+")
+    featured_product = models.ForeignKey(
+        "Product", on_delete=models.SET_NULL, null=True, related_name="+"
+    )
 
 
 class Product(models.Model):
@@ -46,6 +48,11 @@ class Customer(models.Model):
         default=MEMBERSHIP_BRONZE,
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["last_name", "first_name"]),
+        ]
+
 
 class Order(models.Model):
     PAYMENT_STATUS_PENDING = "P"
@@ -76,6 +83,7 @@ class OrderItem(models.Model):
 class Address(models.Model):
     street = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
+    zip = models.CharField(max_length=100, default="-")
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
 
