@@ -334,3 +334,10 @@ The Meta subclass is used to define metadata for the Django model, influencing h
 * unique_together: Specifies a list of field names that should be unique together.
 
 #! NOTE --> Use "git reset --hard HEAD~1" to revert the last commit
+
+5. Now we will install MySQL in our system
+6. Create a new database using command "CREATE DATABASE storefront"
+7. Now in our django project install MySQL client using "pip install mysqlclient"
+8. Go to "https://mockaroo.com/" and create dummy data for our database. I have created dummy data for store_customer table.
+9. Insert data in our database using any SQL editor.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
