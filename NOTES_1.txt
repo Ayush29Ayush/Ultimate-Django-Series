@@ -1,4 +1,4 @@
-#! SECTION - 1
+#! SECTION - 1 (Django Fundamentals)
 A) Introduction to Django
 B) Fundamentals of webdev
 C) Setting up development environment
@@ -83,7 +83,7 @@ E) 2 essential debugging techniques
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#! SECTION - 2
+#! SECTION - 2 (Django Models)
 Refer => "https://docs.djangoproject.com/en/5.0/ref/models/fields/"
 A) Data Models
 B) Build e-commerce data Models
@@ -304,7 +304,7 @@ For example, when you create a new record with Model.objects.create(...) or retr
 #! NOTE -> In short, objects means all the records and instance means a single record of a model.
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#! SECTION - 3
+#! SECTION - 3 (Setting up the database)
 
 A) Creating migrations
 B) Running migrations
@@ -341,3 +341,17 @@ The Meta subclass is used to define metadata for the Django model, influencing h
 8. Go to "https://mockaroo.com/" and create dummy data for our database. I have created dummy data for store_customer table.
 9. Insert data in our database using any SQL editor.
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#! SECTION - 4 (Django ORM)
+
+A) Introduction to Django ORM
+B) Querying and manipulating data
+C) Filtering Data
+D) Sorting Data
+E) Ordering Data
+G) Grouping Data, etc.
+
+#! A) Introduction to Django ORM
+* Reduce complexity in code
+* Make the code more understandable
+* Help us get more done in less time
