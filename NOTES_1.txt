@@ -223,3 +223,74 @@ class Product(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
     promotions = models.ManyToManyField(Promotion)
 "
+
+#! Generic Relations - VERY IMPORTANT
+"
+from django.db import models
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+
+class Tag(models.Model):
+    label = models.CharField(max_length=255)
+    
+class TaggedItem(models.Model):
+    # What tag applied to what object
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    # What type of object is being tagged (eg. product, article)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    # ID
+    object_id = models.PositiveIntegerField()  
+    content_object = GenericForeignKey('content_type', 'object_id')
+"
+
+Fields Explained:
+
+* user: The user who liked the item.
+* content_type: A ForeignKey to the ContentType model, identifying the model of the liked item (e.g., Post, Comment, Photo).
+* object_id: The primary key of the liked item.
+* content_object: A GenericForeignKey that combines content_type and object_id to create a dynamic relation to any model instance.
+-----------------------------------------------------------------------------------------------------------------------------------------------
+The ContentType and GenericForeignKey fields are part of Django's contenttypes framework, which allows for creating generic relationships between models. This can be useful when you want to relate a model to any other model, not just one specific model.
+
+#! ContentType
+ContentType is a model provided by Django's contenttypes framework that keeps track of all the models installed in your Django project.
+Each instance of ContentType represents a different model in the project, identified by its app label and model name.
+
+#! GenericForeignKey
+GenericForeignKey is a way to create a foreign key-like relationship that can point to any model.
+It requires two additional fields: content_type and object_id.
+content_type is a ForeignKey to the ContentType model.
+object_id is a field that stores the primary key of the related object.
+GenericForeignKey does not create a database-level constraint but works at the ORM level.
+-----------------------------------------------------------------------------------------------------------------------------------------------
+Creating a LikedItem Instance:
+
+Suppose you have a Post model and a Comment model, and you want users to be able to like both posts and comments.
+
+"
+from myapp.models import Post, Comment
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import User
+from myapp.models import LikedItem
+
+# Create some objects
+user = User.objects.create(username="john")
+post = Post.objects.create(title="A Post", content="Post content")
+comment = Comment.objects.create(post=post, text="A comment")
+
+# Liking a post
+post_content_type = ContentType.objects.get_for_model(Post)
+liked_post = LikedItem.objects.create(user=user, content_type=post_content_type, object_id=post.id)
+
+# Liking a comment
+comment_content_type = ContentType.objects.get_for_model(Comment)
+liked_comment = LikedItem.objects.create(user=user, content_type=comment_content_type, object_id=comment.id)
+"
+
+Querying Liked Items:
+You can query the LikedItem model to get all items a user has liked, regardless of their type.
+"
+liked_items = LikedItem.objects.filter(user=user)
+for item in liked_items:
+    print(item.content_object)  # This will print the related object (post or comment)
+"
