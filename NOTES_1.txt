@@ -351,7 +351,85 @@ D) Sorting Data
 E) Ordering Data
 G) Grouping Data, etc.
 
+#TODO Refer Queryset API => "https://docs.djangoproject.com/en/5.0/ref/models/querysets/"
+
 #! A) Introduction to Django ORM
 * Reduce complexity in code
 * Make the code more understandable
 * Help us get more done in less time
+
+#! B) Querying and manipulating data
+1. Querying data => Using "query_set = Product.objects.all()" gives a queryset which is stored in a variable called query_set. Queryset is a collection of objects retrieved from the database.
+2. Commonly used queryset api are filter(), exclude(), order_by(), distinct(), count(), first(), last(), reverse(), values_list(), values() etc.
+
+#! Retrieving data
+* query_set = Product.objects.all()
+* query_set = Product.objects.get(id=1)
+* query_set = Product.objects.get(pk=1)
+* product = Product.objects.filter(id=1).first()
+* product = Product.objects.filter(id=1).exists()
+
+#! Filtering Data
+* queryset = Product.objects.filter(unit_price__gt=20)
+* queryset = Product.objects.filter(unit_price__lt=20)
+* queryset = Product.objects.filter(unit_price__gte=20)
+* queryset = Product.objects.filter(unit_price__lte=20)
+* queryset = Product.objects.filter(unit_price__range=(20,30))
+* queryset = Product.objects.filter(title__contains="coffee")
+* queryset = Product.objects.filter(title__icontains="coffee")       # case insensitive
+* queryset = Product.objects.filter(title__startswith="coffee")
+* queryset = Product.objects.filter(title__istartswith="coffee")     # case insensitive
+* queryset = Product.objects.filter(title__endswith="portioned")
+* queryset = Product.objects.filter(title__iendswith="portioned")    # case insensitive
+* queryset = Product.objects.filter(last_update__year=2024)
+* queryset = Product.objects.filter(description__isnull=True)
+
+* queryset = Product.objects.filter(inventory__lt=10, unit_price__lt=20)  # multiple filters can be combined
+
+
+#TODO - Filtering Exercises
+Write code to find: 
+• Customers with .com accounts => "queryset = Customer.objects.filter(email__endswith=".com")"
+• Collections that don’t have a featured product => "queryset = Collection.objects.filter(featured_product__isnull=True)"
+• Products with low inventory (less than 10) => "queryset = Product.objects.filter(inventory__lt=10)"
+• Orders placed by customer with id = 1 => "queryset = Order.objects.filter(customer_id=1)"
+• Order items for products in collection 3 => "queryset = OrderItem.objects.filter(product__collection__id=3)" This means that since product is a foreign key, we have to use the "product__" prefix. Then since collection is a foreign key in product, we have to use the "collection__" prefix. Then use the "id" to specify the collection id.
+
+// My solution
+"
+    collection_id = 3
+    collection = Collection.objects.get(id=collection_id)
+
+    # Retrieve products in this collection
+    products_in_collection = Product.objects.filter(collection=collection)
+
+    # Now, get the order items for these products
+    order_items_for_products_in_collection = OrderItem.objects.filter(product__in=products_in_collection)
+"
+
+'''
+The requirement to retrieve order items for products in a specific collection (in this case, collection ID 3) can indeed be efficiently met using Django's double underscore syntax for filtering through relationships. This approach allows you to navigate through related models using the `__` separator, effectively performing a join-like operation without needing explicit joins.
+
+In this line:
+
+```python
+queryset = OrderItem.objects.filter(product__collection__id=3)
+```
+
+- `OrderItem.objects` starts the query on the `OrderItem` model.
+- `.filter()` specifies the condition for the query.
+- `product__collection__id=3` navigates through the `product` relationship to its related `collection`, and then filters based on the `id` of that collection being 3.
+
+This syntax tells Django to generate a SQL query that includes a join between the `OrderItem` and `Product` tables, and then another join between the `Product` and `Collection` tables, effectively filtering the `OrderItem` records based on the `id` of the `Collection`.
+
+This approach is very efficient because it leverages Django's ORM capabilities to handle the complexity of the join operation behind the scenes, allowing you to focus on writing the logic for your application.
+'''
+
+#! Complex Filtering Data
+1. We use Q objects to build complex queries
+2. Used to filter based on multiple complex conditions in a single query
+Approach - 1 => "queryset = Product.objects.filter(inventory__lt=10, unit_price__lt=20)" This is AND condition
+Approach - 2 => "queryset = Product.objects.filter(inventory__lt=10).filter(unit_price__lt=20)" This is also AND condition
+#? But to apply OR condition, we have to use "Q" objects. "Q" objects uses bitwise operators to combine multiple conditions.
+Approach - 3 => "queryset = Product.objects.filter(Q(inventory__lt=10) | Q(unit_price__lt=20))" This is OR condition
+Approach - 4 => "queryset = Product.objects.filter(Q(inventory__lt=10) & ~Q(unit_price__lt=20))" This is also AND condition with negation i.e NOT operator
