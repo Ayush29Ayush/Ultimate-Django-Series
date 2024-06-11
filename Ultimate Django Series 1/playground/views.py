@@ -1,5 +1,8 @@
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
+from store.models import Product, Customer, Collection, OrderItem
 
 # Create your views here.
 #! request -> response
@@ -7,15 +10,10 @@ from django.shortcuts import render
 #! action of the view
 
 
-def calculate():
-    x = 1
-    y = 2
-    return x+y
-
 def say_hello(request):
-    # return HttpResponse("Hello World")
-    # x = 1
-    # y = 2
-    sum = calculate()
-    context = {"name": "Ayush"}
+
+    # queryset = Product.objects.filter(inventory__lt=10, unit_price__lt=20)
+    queryset = Product.objects.filter(Q(inventory__lt=10) | Q(unit_price__lt=20))
+
+    context = {"name": "Ayush", "products": list(queryset)}
     return render(request, "hello.html", context=context)
