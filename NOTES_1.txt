@@ -487,3 +487,87 @@ Alternate to values() and values_list(), we can use the defer() and only() metho
 "queryset = Product.objects.only("id", "title", "unit_price")"
 2. To only not get the specified fields we use "defer()"
 "queryset = Product.objects.defer("unit_price")"
+
+#! Selecting related objects
+** "queryset = Product.objects.all()" gave us a queryset with all the fields but when we tried to fetch any detail from the related object which is connected using foreign key like collection, we got the output in 270ms.
+This is highly inefficient and not optimised.
+#? Keep checking the SQL section from django-debug-toolbar
+Using 
+"
+{% for product in products %}
+    <li>{{ product.title }} - {{ product.collection }}</li>
+{% endfor %}
+"
+gives 
+"
+Bread Ww Cluster - Collection object (6)
+Island Oasis - Raspberry - Collection object (3)
+Shrimp - 21/25, Peel And Deviened - Collection object (3)
+Wood Chips - Regular - Collection object (5)
+Lettuce - Mini Greens, Whole - Collection object (5)
+"
+but using 
+"
+{% for product in products %}
+    <li>{{ product.title }} - {{ product.collection.title }}</li>
+{% endfor %}
+"
+gives
+"
+Bread Ww Cluster - Pets
+Island Oasis - Raspberry - Beauty
+Shrimp - 21/25, Peel And Deviened - Beauty
+Wood Chips - Regular - Stationary
+Lettuce - Mini Greens, Whole - Stationary
+"
+1. This takes a long time to execute as it sends a query to the database for each product so 1000 records means 1000 queries to the database.
+2. To solve this issue, we need to preload the related objects connected through foreign keys.
+3. Preloading is a technique that allows us to send a single query to the database to retrieve all the related objects for a given model.
+4. We will use "select_related()" and "prefetch_related()"
+5. select_related() can only be used when there is a single relation between the two models i.e one-to-one or one-to-many.
+6. prefetch_related() can be used when there are multiple relations between the two models i.e. many-to-many or many-to-one.
+#! selected_related (1)
+#! prefetch_related (n)
+** "queryset = Product.objects.select_related("collection").all()" gave us a queryset with all the related objects for each product in just 5ms.
+** "queryset = Product.objects.prefetch_related("promotions").all()" gave us a queryset with all the related objects for each product in just 5ms.
+7. To get all the collections and promotions for each product, we can use "queryset = Product.objects.prefetch_related("promotions").select_related("collection").all()"
+
+#TODO Ques) Get the last 5 orders with their customer and items (including products)
+Ans) 
+#! Step-1
+queryset = Order.objects.all()
+#! Step-2
+queryset = Order.objects.all().order_by("-placed_at")[:5]
+#! Step-3
+queryset = Order.objects.all().order_by("-placed_at").select_related("customer")[:5]
+#! Step-4
+queryset = Order.objects.all().order_by("-placed_at").select_related("customer").prefetch_related("orderitem_set")[:5]
+#! Step-5
+queryset = Order.objects.all().order_by("-placed_at").select_related("customer").prefetch_related("orderitem_set__product")[:5]
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#! Aggregate functions
+1. Common aggregate functions are: Count(), Max(), Min(), Avg(), Sum()
+2. "result = Product.objects.aggregate(count=Count('id'))"
+3. "result = Product.objects.aggregate(count_ayush=Count('id'), min_price=Min('unit_price'))"
+4. "result = Product.objects.filter(collection__id=1).aggregate(count_ayush=Count("id"), min_price=Min("unit_price"))"
+
+#! Annotate functions
+1. The use of annotate() is similar to the aggregate() function
+2. "result = Customer.objects.annotate(is_new=F('id'))"
+3. "result = Customer.objects.annotate(is_new=Value(True))"
+
+#! Callling Database functions
+1. result = Customer.objects.annotate(full_name=Func(F("first_name"), Value(" "), F("last_name"), function="CONCAT"))  
+2. result = Customer.objects.annotate(full_name=Concat(F("first_name"), Value(" "), F("last_name")))
+3. result = Customer.objects.annotate(full_name=Concat('first_name',Value(' '), 'last_name'))  
+
+#! Grouping Data
+1. result = Customer.objects.annotate(orders_count=Count("orders")) 
+
+#! Expression Wrapper Functions
+"
+increased_price_by_ayush = ExpressionWrapper(F('unit_price') * 1.1, output_field=DecimalField())
+result = Product.objects.annotate(increased_price_by_ayush=increased_price_by_ayush) 
+"
+
