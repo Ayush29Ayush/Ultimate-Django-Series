@@ -1,7 +1,9 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q, F
+from django.db.models import Q, F, Value, Func, ExpressionWrapper, DecimalField
+from django.db.models.functions import Concat
+from django.db.models.aggregates import Count, Max, Min, Avg, Sum
 from store.models import Product, Customer, Collection, OrderItem, Order
 
 # Create your views here.
@@ -11,11 +13,8 @@ from store.models import Product, Customer, Collection, OrderItem, Order
 
 
 def say_hello(request):
+    increased_price_by_ayush = ExpressionWrapper(F('unit_price') * 1.1, output_field=DecimalField())
+    result = Product.objects.annotate(increased_price_by_ayush=increased_price_by_ayush)  
 
-    # selected_related (1)
-    # prefetch_related (n)
-    # queryset = Product.objects.prefetch_related("promotions").select_related("collection").all()
-    queryset = Order.objects.all().order_by("-placed_at").select_related("customer").prefetch_related("orderitem_set__product")[:5]
-
-    context = {"name": "Ayush", "orders": list(queryset)}
+    context = {"name": "Ayush", "result": list(result)}
     return render(request, "hello.html", context=context)
