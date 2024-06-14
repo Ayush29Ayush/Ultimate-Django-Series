@@ -571,3 +571,318 @@ increased_price_by_ayush = ExpressionWrapper(F('unit_price') * 1.1, output_field
 result = Product.objects.annotate(increased_price_by_ayush=increased_price_by_ayush) 
 "
 
+#! Querying Generic Relationships
+"
+def say_hello(request):
+    content_type = ContentType.objects.get_for_model(Product)
+
+    queryset = TaggedItem.objects.select_related("tag").filter(
+        content_type=content_type, object_id=1
+    )
+
+    context = {"name": "Ayush", 'tags': list(queryset)}
+    return render(request, "hello.html", context=context)
+"
+
+#! Custom Managers
+The above query is not very efficient as we are writing all the logic in the view. To solve and optimize this, we can use a custom manager.
+We can replace the above code with just "TaggedItem.objects.get_tags_for(Product, 1)"
+
+#? Changes in models.py
+"
+class TaggedItemManager(models.Manager):
+    def get_tags_for(self, model_type, object_id):
+        content_type = ContentType.objects.get_for_model(model_type)
+        return TaggedItem.objects.select_related("tag").filter(
+            content_type=content_type, object_id=object_id
+        )
+
+class TaggedItem(models.Model):
+    objects = TaggedItemManager()
+    
+    # What tag applied to what object
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    # What type of object is being tagged (eg. product, article)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    # ID
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+"
+
+#? Changes in views.py
+"
+def say_hello(request):
+    queryset = TaggedItem.objects.get_tags_for(model_type=Product, object_id=1)
+
+    context = {"name": "Ayush", 'tags': list(queryset)}
+    return render(request, "hello.html", context=context)
+" 
+
+#! Understanding QuerySet Cache 
+It is used to improve the performance of querysets.
+
+#! Creating Objects 
+Approach - 1
+"
+def say_hello(request):
+    collection = Collection()
+    collection.title = "Video Games"
+    collection.featured_product = Product(pk=1)
+    collection.save()
+    
+    print(collection.id)
+
+    context = {"name": "Ayush"}
+    return render(request, "hello.html", context=context)
+"
+
+Approach - 2
+"
+def say_hello(request):
+    collection = Collection.objects.create(
+        title="Video Games",
+        featured_product=Product(pk=1),
+    )
+
+    print(collection.id)
+
+    context = {"name": "Ayush"}
+    return render(request, "hello.html", context=context)
+"
+
+Approach - 3
+"
+def say_hello(request):
+    collection = Collection.objects.create(
+        title="Online Games",
+        featured_product_id=1,
+    )
+
+    print(collection.id)
+
+    context = {"name": "Ayush"}
+    return render(request, "hello.html", context=context)
+"
+
+#! Updating Objects
+Approach - 1
+"
+def say_hello(request):
+    collection = Collection(pk=11)
+    collection.featured_product = None
+    collection.title = "Only Games"
+    collection.save()
+"
+
+Approach - 2
+"
+def say_hello(request):
+    collection = Collection.objects.get(pk=11)
+    collection.featured_product = None
+    collection.title = "Only Games"
+    collection.save()
+"
+
+Approach - 3
+"
+def say_hello(request):
+    Collection.objects.filter(pk=11).update(title="Only Games", featured_product=None)
+
+    context = {"name": "Ayush"}
+    return render(request, "hello.html", context=context)
+"
+
+#! Deleting Objects
+Approach - 1
+"
+def say_hello(request):
+    collection = Collection(pk=11)
+    collection.delete()
+"
+
+Approach - 2
+"
+def say_hello(request):
+    Collection.objects.filter(pk=11).delete()
+"
+
+Approach - 3
+"
+def say_hello(request):
+    Collection.objects.filter(id__in=[11, 12, 13]).delete()
+    Collection.objects.filter(id__gt=10).delete()
+"
+
+#! Transactions
+1. Use decorator => @transaction.atomic
+2. Use "with" => with transaction.atomic():
+
+#! Executing Raw SQL Queries
+1. "queryset = Products.objects.raw("SELECT * FROM store_product")"
+2. We call call a STORED_PROCEDURE by using "queryset = Products.objects.raw("CALL get_products()")"
+OR
+"with connection.cursor() as cursor:
+    cursor.callproc("get_products", [1,2,'a'])"
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#! SECTION - 5
+
+#! Admin Interface
+1. Use command "python manage.py createsuperuser"
+2. To change password use "python manage.py changepassword {username}"
+3. To delete user use "python manage.py deleteuser {username}"
+4. Change the site header by using "admin.site.site_header = 'Storefront Admin'" in urls.py of the project.
+5. Change the site title by using "admin.site.site_title = 'Storefront Admin'" in urls.py of the project.
+6. To register models, use "admin.site.register(Collection)" in admin.py of the project.
+7. To change the default object names shown to title, make this changes in Collection model
+"
+class Collection(models.Model):
+    title = models.CharField(max_length=255)
+    featured_product = models.ForeignKey(
+        "Product", on_delete=models.SET_NULL, null=True, related_name="+"
+    )
+    
+    def __str__(self) -> str:
+        return self.title
+"
+8. Add Meta class in Collection model to change the ordering of the collections
+"
+class Collection(models.Model):
+    title = models.CharField(max_length=255)
+    featured_product = models.ForeignKey(
+        "Product", on_delete=models.SET_NULL, null=True, related_name="+"
+    )
+    
+    def __str__(self) -> str:
+        return self.title
+   
+    class Meta:
+        ordering = ["title"]
+"
+
+#! Customizing the List Page
+Approach - 1
+"
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['title', 'unit_price']
+
+admin.site.register(Collection)
+admin.site.register(Product, ProductAdmin)
+"
+Approach - 2
+"
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['title', 'unit_price']
+    list_editable = ['unit_price']
+    list_per_page = 25
+    
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ['first_name', 'last_name', 'membership']
+    list_editable = ['membership']
+    list_per_page = 25
+    ordering = ["first_name", "last_name"]
+
+admin.site.register(Collection)
+"
+
+#! Adding Computed Columns 
+"
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ["title", "unit_price", "inventory", "invertory_status"]
+    list_editable = ["unit_price"]
+    list_per_page = 25
+
+    @admin.display(ordering="inventory")
+    def invertory_status(self, Product):
+        if Product.inventory < 10:
+            return "LOW INVENTORY"
+        return "IN STOCK"
+"
+
+#! Selecting Related Objects 
+Approach - 1 (takes a lot of sql queries in this approach)
+"
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ["title", "unit_price", "inventory", "invertory_status", "collection_title"]
+    list_editable = ["unit_price"]
+    list_per_page = 25
+
+    def collection_title(self, Product):
+        return Product.collection.title
+    
+    @admin.display(ordering="inventory")
+    def invertory_status(self, Product):
+        if Product.inventory < 10:
+            return "LOW INVENTORY"
+        return "IN STOCK"
+"
+Approach - 2 (better performance as it it takes only 6-7 sql queries) 
+"
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ["title", "unit_price", "inventory", "invertory_status", "collection_title"]
+    list_editable = ["unit_price"]
+    list_per_page = 25
+    list_select_related = ["collection"]
+
+    def collection_title(self, Product):
+        return Product.collection.title
+    
+    @admin.display(ordering="inventory")
+    def invertory_status(self, Product):
+        if Product.inventory < 10:
+            return "LOW INVENTORY"
+        return "IN STOCK"
+"
+
+#! Overriding the Base QuerySet
+"
+@admin.register(Collection)
+class CollectionAdmin(admin.ModelAdmin):
+    list_display = ["title", "products_count"]
+    search_fields = ["title"]
+
+    @admin.display(ordering="products_count")
+    def products_count(self, Collection):
+        return Collection.products_count
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            products_count=Count("product")
+        )
+"
+
+#! Adding Search and Filtering Fields
+"
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ["first_name", "last_name", "membership"]
+    list_editable = ["membership"]
+    list_per_page = 25
+    ordering = ["first_name", "last_name"]
+    search_fields = ["first_name__istartswith", "last_name__istartswith"]
+    list_filter = ["membership"]
+"
+
+#! Creating Custom Actions
+"
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ["first_name", "last_name", "membership"]
+    list_editable = ["membership"]
+    list_per_page = 25
+    ordering = ["first_name", "last_name"]
+    search_fields = ["first_name__istartswith", "last_name__istartswith"]
+    list_filter = ["membership"]
+    actions = ["set_ayush"]
+
+    @admin.action(description="Set first_name to Ayush")
+    def set_ayush(self, request, queryset):
+        queryset.update(first_name="Ayush")
+"
+
+---------------------------------------------THE END OF NOTES------------------------------------------------------
