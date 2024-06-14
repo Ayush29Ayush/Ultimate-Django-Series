@@ -884,5 +884,24 @@ class CustomerAdmin(admin.ModelAdmin):
     def set_ayush(self, request, queryset):
         queryset.update(first_name="Ayush")
 "
+----------------------------------------------------------------------------------------------------------------------------------------------
 
----------------------------------------------THE END OF NOTES------------------------------------------------------
+#! All about Django forms
+27. Django forms are used to create forms in the templates.
+28. Use namespace to avoid conflicts between different apps in the project along with their urls names that are being used in the templates.
+29. Use csrf_token in the form to avoid csrf attacks.
+30. Use is_valid to check if the form is valid and use cleaned_data to get the cleaned data.
+31. Use forms.Form to create a django form and forms.ModelForm to create forms for the models.
+32. In Django's class-based views, such as FormView, form_valid() and form_invalid() are methods that are called automatically during the form processing lifecycle. These methods are part of the view's lifecycle and are invoked based on the outcome of form validation.
+
+form_valid():
+This method is called automatically when the submitted form data passes all validation checks defined in the form class (ContactUsForm in your case).
+Inside this method, you typically perform actions that should occur when the form data is valid, such as saving the data to the database.
+After executing the logic inside form_valid(), Django redirects the user to the success_url specified in the view.
+
+form_invalid():
+This method is called automatically when the submitted form data fails any validation checks defined in the form class.
+Inside this method, you handle actions to be taken when the form data is invalid, such as re-rendering the form with error messages.
+After executing the logic inside form_invalid(), Django re-renders the form with errors and presents it to the user for correction.
+
+---------------------------------------------THE END OF NOTES---------------------------------------------------------------------------------
