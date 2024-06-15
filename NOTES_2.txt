@@ -5,3 +5,32 @@ This this the second part of the series which will be continued from where the f
 2. Run "python manage.py makemigrations" and "python manage.py migrate" to create the tables in the database.
 3. Now go to Server option and click in Data Import, then select the seed2 and storefront2 database. Click start import.
 4. Create superuser for the admin panel.
+
+#! What are RESTful APIs 
+* API stands for Application Programming Interface.
+* API is a set of instructions that a server uses to understand and respond to a request. * It is dynamic in nature and can be used to interact with any web service.
+* Different endpoints in an API results in different actions.
+* It is a standard that defines how a server should respond to a request.
+
+* RESTful API means Representational State Transfer (REST).
+* RESTful APIs has many benifits like they are fast, secure, scalability, maintainability, easy to understand and easy to change.
+
+** Main 3 things in RESTful API are --> resources, representations and HTTP methods.
+
+#! Resources
+A resource in an API is just like a application in our project like "Products", "Collections", "Tags", "Carts", "Orders", "Customers".
+* Resources are just collection of data.
+* Resources are identified by their URLs (Uniform Resource Locator).
+
+#! Resource Representations
+* A resource representation is a representation of a resource in a particular format.
+* A resource representation is identified by its pattern.
+
+#! HTTP Methods
+* HTTP methods are a set of verbs that a server can use to perform various actions on a resource.
+* HTTP methods are identified by their name.
+* HTTP methods --> GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD
+
+#! Install Django REST framework
+1. pip install djangorestframework
+2. Add 'rest_framework' to INSTALLED_APPS in settings.py
