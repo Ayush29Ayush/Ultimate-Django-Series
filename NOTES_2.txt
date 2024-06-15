@@ -1,0 +1,3 @@
+This this the second part of the series which will be continued from where the first part ended.
+
+#! Set up the database and code for the project
