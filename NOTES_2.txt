@@ -1,10 +1,15 @@
 This this the second part of the series which will be continued from where the first part ended.
 
+#* Section - 1
+
 #! Set up the database and code for the project
 1. Open MySQL Workbench and create a new database named storefront2.
 2. Run "python manage.py makemigrations" and "python manage.py migrate" to create the tables in the database.
 3. Now go to Server option and click in Data Import, then select the seed2 and storefront2 database. Click start import.
 4. Create superuser for the admin panel.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#* Section - 2
 
 #! What are RESTful APIs 
 * API stands for Application Programming Interface.
@@ -245,3 +250,211 @@ class ProductSerializer(serializers.ModelSerializer):
     def calculate_tax(self, product: Product):
         return product.unit_price * Decimal(1.1)
 "
+
+#! Deserializing Objects and Data Validation
+1. Deserialization is the process of converting a JSON object into a Python object.
+2. It is the opposite of serializing.
+3. It happens when the server gets data from a client.
+
+4. Method - 1
+"
+@api_view(["GET", "POST"])
+def product_list(request):
+    if request.method == "GET":
+        queryset = Product.objects.select_related("collection").all()
+        serializer = ProductSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+    elif request.method == "POST":
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            print(serializer.validated_data)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+"
+5. Method - 2 : rather than using this if else block for validatiing data, we can use 
+"
+@api_view(["GET", "POST"])
+def product_list(request):
+    if request.method == "GET":
+        queryset = Product.objects.select_related("collection").all()
+        serializer = ProductSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+    elif request.method == "POST":
+        serializer = ProductSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+"
+
+#! Saving Objects
+Data to create using POST
+"
+{
+   "title": "a",
+   "slug": "a",
+   "unit_price": 1,
+   "collection": 1,
+   "inventory": 1
+}
+"
+** serializers.py
+"
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ["id", "title", "description", "slug", "inventory", "unit_price", "price_with_tax", "collection"]
+
+    price_with_tax = serializers.SerializerMethodField(method_name="calculate_tax")
+
+    def calculate_tax(self, product: Product):
+        return product.unit_price * Decimal(1.1)
+"
+
+** views.py
+"
+@api_view(["GET", "POST"])
+def product_list(request):
+    if request.method == "GET":
+        queryset = Product.objects.select_related("collection").all()
+        serializer = ProductSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+    elif request.method == "POST":
+        serializer = ProductSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET", "PUT"])
+def product_detail(request, id):
+    if request.method == "GET":
+        product = get_object_or_404(Product, pk=id)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+    elif request.method == "PUT":
+        product = get_object_or_404(Product, pk=id)
+        serializer = ProductSerializer(product, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+"
+
+#! Deleting Objects
+** models.py
+"class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='orderitems')
+    quantity = models.PositiveSmallIntegerField()
+    unit_price = models.DecimalField(max_digits=6, decimal_places=2)
+"
+** views.py
+"
+@api_view(["GET", "PUT", "DELETE"])
+def product_detail(request, id):
+    if request.method == "GET":
+        product = get_object_or_404(Product, pk=id)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+    elif request.method == "PUT":
+        product = get_object_or_404(Product, pk=id)
+        serializer = ProductSerializer(product, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    elif request.method == "DELETE":
+        product = get_object_or_404(Product, pk=id)
+        
+        if product.orderitems.count() > 0:
+            return Response({"error": "Product cannot be deleted because it is associated with an order item."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+"
+
+#! Exercise- Building the Collections API
+Ques) Implement the Collection API similar to the Product API
+Ans)
+
+** models.py -> we added a related_name="products" in the Product model to get the products in the collection using COUNT.
+"
+class Product(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField()
+    description = models.TextField(null=True, blank=True)
+    unit_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        validators=[MinValueValidator(1)])
+    inventory = models.IntegerField(validators=[MinValueValidator(0)])
+    last_update = models.DateTimeField(auto_now=True)
+    collection = models.ForeignKey(Collection, on_delete=models.PROTECT, related_name='products')
+    promotions = models.ManyToManyField(Promotion, blank=True)
+
+    def __str__(self) -> str:
+        return self.title
+
+    class Meta:
+        ordering = ['title']
+"
+** views.py
+"
+@api_view(["GET", "POST"])
+def collection_list(request):
+    if request.method == "GET":
+        queryset = Collection.objects.annotate(products_count=Count("products")).all()
+        serializer = CollectionSerializer(queryset, many=True)
+        return Response(serializer.data)
+    elif request.method == "POST":
+        serializer = CollectionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET", "PUT", "DELETE"])
+def collection_detail(request, pk):
+    # collection = get_object_or_404(Collection, pk=pk) // gives error because products_count is not defined by default but is required in CollectionSerializer
+    collection = get_object_or_404(
+        Collection.objects.annotate(products_count=Count("products")).all(), pk=pk
+    )
+    if request.method == "GET":
+        serializer = CollectionSerializer(collection)
+        return Response(serializer.data)
+    elif request.method == "PUT":
+        serializer = CollectionSerializer(collection, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    elif request.method == "DELETE":
+        if collection.products.count() > 0:
+            return Response(
+                {
+                    "error": "Collection cannot be deleted because it includes one or more products."
+                },
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
+        collection.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+"
+** serializers.py
+"
+class CollectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Collection
+        fields = ["id", "title", "products_count"]
+        
+    products_count = serializers.IntegerField()
+"
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#* Section - 3
