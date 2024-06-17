@@ -1,6 +1,6 @@
 This this the second part of the series which will be continued from where the first part ended.
 
-#* Section - 1
+#* Section - 1 (Setting Up the Project and Database)
 
 #! Set up the database and code for the project
 1. Open MySQL Workbench and create a new database named storefront2.
@@ -9,7 +9,7 @@ This this the second part of the series which will be continued from where the f
 4. Create superuser for the admin panel.
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#* Section - 2
+#* Section - 2 (RESTful APIs)
 
 #! What are RESTful APIs 
 * API stands for Application Programming Interface.
@@ -457,4 +457,11 @@ class CollectionSerializer(serializers.ModelSerializer):
 "
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#* Section - 3
+#* Section - 3 (Advanced API concepts)
+* Class-based views
+* Generic views
+* Viewsets
+* Routers
+* Searching, filtering, pagination, etc.
+
+#! Class-based views
