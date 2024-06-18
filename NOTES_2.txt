@@ -572,6 +572,8 @@ Link -> "https://www.django-rest-framework.org/api-guide/generic-views/"
 * Pretty much similar to our implementation in views till now.
 
 #! Generic Views 
+Most Common Generic Views are "ListCreateAPIView" and "RetrieveUpdateDestroyAPIView"
+
 * Rather than using mixins directly, we use concrete classes like "Generic Views".
 * Generic views are used to implement common operations like searching, filtering, ordering, pagination, etc.
 Here we re-write the ProductList and CollectionList views using generic views -> "ListCreateAPIView"
@@ -651,4 +653,54 @@ urlpatterns = [
     path('collections/<int:pk>/', views.CollectionDetail.as_view(), name='collection-detail'),
     path('collections/', views.CollectionList.as_view()),
 ]
+"
+
+#! ViewSets
+Most common ViewSets are "ModelViewSet" and "GenericViewSet"
+* Naming convention is similar to generic views -> "ModelViewSet" will be "ProductViewSet"
+* It is just a class which has all the features of generic views and mixins.
+* Now rather than using 2 classes "ProductList" and "ProductDetail" in views.py, we can use "ProductViewSet" in views.py
+
+** views.py
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def delete(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        if product.orderitems.count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                },
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CollectionViewSet(ModelViewSet):
+    queryset = Collection.objects.annotate(products_count=Count("products")).all()
+    serializer_class = CollectionSerializer
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def delete(self, request, pk):
+        collection = get_object_or_404(
+            Collection.objects.annotate(products_count=Count("products")).all(), pk=pk
+        )
+        if collection.products_count > 0:
+            return Response(
+                {
+                    "error": "Collection cannot be deleted because it includes one or more products."
+                },
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
+        collection.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 "
