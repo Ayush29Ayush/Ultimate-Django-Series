@@ -835,3 +835,71 @@ class CollectionViewSet(ModelViewSet):
     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 "
+
+#! Building the Reviews API 
+Step-1
+* Create a review model
+* Run makemigrations
+* Migrate
+
+Step-2
+* Create a ReviewSerializer
+* Create a view
+* Register a route
+
+#! Nested Routers 
+For urls like "products/<int:pk>/reviews/", we can use NestedRouters.
+Refer => "https://pypi.org/project/drf-nested-routers/" and "https://github.com/alanjds/drf-nested-routers"
+* pip install drf-nested-routers
+
+Create a new serializer for reviews:
+"
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ["id", "date", "name", "description"]
+        # fields = ["id", "date", "name", "description", "product"]
+        
+    def create(self, validated_data):
+        product_id = self.context["product_id"]
+        return Review.objects.create(product_id=product_id, **validated_data)
+"
+
+Create a new view for reviews:
+"
+class ReviewViewSet(ModelViewSet):
+    # queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    
+    #! This is same as defining queryset but since we want the Reviews to be filtered acc to the pk, we will overwrite the default get_queryset()
+    def get_queryset(self):
+        # print(self.kwargs)
+        return Review.objects.filter(product_id=self.kwargs["product_pk"])
+    
+    #! Since we do not want to pass the product id manually and want it to be taken from the url, pass the url details as context
+    def get_serializer_context(self):
+        print(self.kwargs)
+        return {"product_id": self.kwargs["product_pk"]}
+"
+
+Then go to "store/urls.py" and write the following code:
+"
+from django.urls import path
+# from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework_nested import routers
+from . import views
+from pprint import pprint
+
+router = routers.DefaultRouter()
+
+router.register('products', views.ProductViewSet)
+router.register('collections', views.CollectionViewSet)
+
+products_router = routers.NestedDefaultRouter(router, 'products', lookup='product')
+products_router.register('reviews', views.ReviewViewSet, basename='product-reviews')
+
+urlpatterns = router.urls + products_router.urls
+
+# pprint(router.urls)
+pprint(urlpatterns)
+"
