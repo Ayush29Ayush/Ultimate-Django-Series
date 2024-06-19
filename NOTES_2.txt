@@ -903,3 +903,41 @@ urlpatterns = router.urls + products_router.urls
 # pprint(router.urls)
 pprint(urlpatterns)
 "
+
+#! Filtering Data
+Since we want the filtering to happen in Product API when any collection_id is passed as a params in the url, we will overwrite the default get_queryset() method in ProductViewSet
+"
+class ProductViewSet(ModelViewSet):
+    # queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    
+    def get_queryset(self):
+        pprint(self)
+        queryset = Product.objects.all()
+        # collection_id = self.request.query_params['collection_id']
+        collection_id = self.request.query_params.get('collection_id')
+        
+        if collection_id is not None:
+            queryset = queryset.filter(collection_id=collection_id)
+        
+        return queryset
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+"
+#? but after removing the queryset field from the ProductViewSet, we will get an error as shown below:
+"
+File "D:\Ultimate-Django-Series\venv\Lib\site-packages\rest_framework\routers.py", line 170, in get_default_basename
+    assert queryset is not None, '`basename` argument not specified, and could ' \
+AssertionError: `basename` argument not specified, and could not automatically determine the name from the viewset, as it does not have a `.queryset` attribute.
+"
+#? Read this error carefully, to fix it add a basename in the url for products "router.register('products', views.ProductViewSet, basename='products')" and rerun the server.
