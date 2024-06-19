@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from store.models import Collection, OrderItem, Product
-from store.serializers import CollectionSerializer, ProductSerializer
+from store.models import Collection, OrderItem, Product, Review
+from store.serializers import CollectionSerializer, ProductSerializer, ReviewSerializer
 
 
 class ProductViewSet(ModelViewSet):
@@ -71,3 +71,18 @@ class CollectionViewSet(ModelViewSet):
     #         )
     #     collection.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ReviewViewSet(ModelViewSet):
+    # queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    
+    #! This is same as defining queryset but since we want the Reviews to be filtered acc to the pk, we will overwrite the default get_queryset()
+    def get_queryset(self):
+        # print(self.kwargs)
+        return Review.objects.filter(product_id=self.kwargs["product_pk"])
+    
+    #! Since we do not want to pass the product id manually and want it to be taken from the url, pass the url details as context
+    def get_serializer_context(self):
+        print(self.kwargs)
+        return {"product_id": self.kwargs["product_pk"]}
