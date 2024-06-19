@@ -941,3 +941,174 @@ File "D:\Ultimate-Django-Series\venv\Lib\site-packages\rest_framework\routers.py
 AssertionError: `basename` argument not specified, and could not automatically determine the name from the viewset, as it does not have a `.queryset` attribute.
 "
 #? Read this error carefully, to fix it add a basename in the url for products "router.register('products', views.ProductViewSet, basename='products')" and rerun the server.
+
+#! Generic Filtering 
+It is getting very complex to apply the filter logic with ModelViewSet, so we can use generic filters like "django_filters"
+1. pip install django-filter
+2. Using this, we can completely remove the get_queryset() logic, just add filter_backends and filterset_fields.
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['collection_id']
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+"
+3. If we want to filter the products based on a range of unit_price, we can use django_filters but with custom filters.
+4. Create a filters.py file in the store folder and write the following code:
+** filters.py
+"
+from django_filters.rest_framework import FilterSet
+from store.models import Product
+
+class ProductFilter(FilterSet):
+    class Meta:
+        model = Product
+        fields = {
+            'collection_id': ['exact'],
+            'unit_price': ['gt', 'lt']
+        }
+"
+** views.py
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+"
+
+#! Searching
+* import statement: "from rest_framework.filters import SearchFilter"
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = ProductFilter
+    # Search_fields = ["title", "description", 'collection__title']
+    search_fields = ["title", "description"]
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+"
+
+#! Sorting
+* import statement: "from rest_framework.filters import OrderingFilter"
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    # Search_fields = ["title", "description", 'collection__title']
+    search_fields = ["title", "description"]
+    ordering_fields = ["unit_price", "last_update"]
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+"
+
+#! Pagination
+* import statement: "from rest_framework.pagination import PageNumberPagination"
+** views.py
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    search_fields = ["title", "description"]
+    ordering_fields = ["unit_price", "last_update"]
+    pagination_class = PageNumberPagination 
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+
+"
+but if you want more control on the pagination, you can create a pagination.py file and write the following code:
+"
+from rest_framework.pagination import PageNumberPagination
+
+class DefaultPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 123
+"
+then we would not require the import statement: "from rest_framework.pagination import PageNumberPagination"
+** views.py
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    search_fields = ["title", "description"]
+    ordering_fields = ["unit_price", "last_update"]
+    # pagination_class = PageNumberPagination 
+    pagination_class = DefaultPagination 
+    
+    def get_serializer_context(self):
+        return {"request": self.request}
+    
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response(
+                {
+                    "error": "Product cannot be deleted because it is associated with an order item."
+                }
+            )
+        return super().destroy(request, *args, **kwargs)
+"
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
