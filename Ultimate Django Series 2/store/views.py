@@ -4,7 +4,7 @@ from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 # from rest_framework.pagination import PageNumberPagination
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin
 # from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.decorators import api_view
@@ -78,7 +78,8 @@ class ReviewViewSet(ModelViewSet):
 #! Since we only need operations like "Creating a cart", "Getting a cart", "Deleting a cart" using POST, GET using id and DELETE methods, we will not use ModelViewSet because it will provide us with list and update methods which will expose all our data in the API. To prevent this, we will create a custom ViewSet.
 #TODO : Create a custom ViewSet by combining various mixins and generic view set. Click on "ModelViewSet" using "Ctrl+Click" to see its implementation.
 # class CartViewSet(ModelViewSet):
-class CartViewSet(CreateModelMixin, GenericViewSet):
+class CartViewSet(CreateModelMixin,RetrieveModelMixin, GenericViewSet):
     #* CreateModelMixin: Used to create a model instance using POST method.
-    queryset = Cart.objects.all()
+    #* RetrieveModelMixin: Used to retrieve a model instance using GET method.
+    queryset = Cart.objects.prefetch_related("items__product").all()
     serializer_class = CartSerializer
