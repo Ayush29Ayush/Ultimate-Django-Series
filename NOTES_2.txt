@@ -1265,3 +1265,17 @@ class CartViewSet(CreateModelMixin,RetrieveModelMixin, GenericViewSet):
     queryset = Cart.objects.prefetch_related("items__product").all()
     serializer_class = CartSerializer
 "
+
+#! Deleting a cart
+"
+class CartViewSet(
+    CreateModelMixin, 
+    RetrieveModelMixin, 
+    DestroyModelMixin, 
+    GenericViewSet
+):
+    # * CreateModelMixin: Used to create a model instance using POST method.
+    # * RetrieveModelMixin: Used to retrieve a model instance using GET method.
+    queryset = Cart.objects.prefetch_related("items__product").all()
+    serializer_class = CartSerializer
+"
