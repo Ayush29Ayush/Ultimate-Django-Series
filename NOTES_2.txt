@@ -1112,3 +1112,117 @@ class ProductViewSet(ModelViewSet):
 "
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#* Section - 4 (Designing a shopping Cart API)
+#! Operations needed to design a shopping cart API:-
+* Create a cart
+* Add items to a cart
+* Update the quantity of items
+* Remove items from a cart
+* Get a cart with its items
+* Delete a cart
+
+#! For each operation, specify the following:-
+* Method
+* url endpoints
+* request body
+* response body
+
+a) Creating a cart
+* Method -> POST
+* url endpoint -> /carts/
+* request body -> None
+* response body -> Cart object
+
+b) Getting a cart
+* Method -> GET
+* url endpoint -> /carts/{id}/
+* request body -> None
+* response body -> Cart object
+
+c) Deleting a cart
+* Method -> DELETE
+* url endpoint -> /carts/{id}/
+* request body -> None
+* response body -> None
+
+d) Adding items to a cart
+* Method -> POST
+* url endpoint -> /carts/{id}/items/
+* request body -> Item object -> {"product_id": 1, "quantity": 2}
+* response body -> Item object
+
+e) Updating the item
+* Method -> PATCH in place of PUT because we want to update the quantity only and not the whole item
+* url endpoint -> /carts/{id}/items/{item_id}/
+* request body -> Item object -> {"quantity": 3}
+* response body -> Item object -> {"product_id": 1, "quantity": 3}
+
+f) Deleting an item
+* Method -> DELETE
+* url endpoint -> /carts/{id}/items/{item_id}/
+* request body -> None
+* response body -> None
+
+So in total there will be 2 ViewSets:
+a) "CartViewSet" contains "/carts" and "/carts/:id"
+b) "CartItemViewSet" contains "/carts/:id/items" and "/carts/:id/items/:item_id"
+
+#! Revisiting the Data Model
+"class Cart(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)"
+1. Our cart model contains pk i.e the "id" and "created_at" but the hacker can easily guess numbers like 1,2,3,etc in urls like "/carts/1/", "/carts/2/", "/carts/3/", etc.
+2. To prevent this, we willl use GUID (Globally Unique Identifier) instead of default pk i.e the "id".
+3. Now our url will look like "/carts/7b7b5b5b-7b5b-7b5b-7b5b-7b5b7b5b7b5b/"
+4. Now our cart model looks like:
+"
+from uuid import uuid4
+
+class Cart(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4)
+    created_at = models.DateTimeField(auto_now_add=True)
+"
+5. Also make changes in CartItem model by adding a related_name and unique_together so that no 2 products can be added to the same cart.
+"
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items') # By default, it was 'cartitem_set'
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveSmallIntegerField()
+    
+    class Meta:
+        unique_together = [['cart', 'product']]
+"
+6. Run commands "python manage.py makemigrations" and "python manage.py migrate" for these changes to be reflected in the database.
+
+#! Creating a Cart 
+Step - 1: Create a serializer
+Step - 2: Create a viewset
+Step - 3: Create a route
+
+#? ModelViewSet: A viewset that provides default create(), retrieve(), update(), partial_update(), destroy() and list() actions.
+#! Since we only need operations like "Creating a cart", "Getting a cart", "Deleting a cart" using POST, GET using id and DELETE methods, we will not use ModelViewSet because it will provide us with list and update methods which will expose all our data in the API. To prevent this, we will create a custom ViewSet.
+#TODO : Create a custom ViewSet by combining various mixins and generic view set. Click on "ModelViewSet" using "Ctrl+Click" to see its implementation.
+** serializers.py
+"
+class CartSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    class Meta:
+        model = Cart
+        fields = ["id"]
+"
+
+** views.py
+"
+class CartViewSet(CreateModelMixin, GenericViewSet):
+    #* CreateModelMixin: Used to create a model instance using POST method.
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+"
+
+** urls.py
+"
+router.register('carts', views.CartViewSet)
+"
+
+
+
