@@ -3,16 +3,29 @@
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+
 # from rest_framework.pagination import PageNumberPagination
-from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin
+from rest_framework.mixins import (
+    ListModelMixin,
+    CreateModelMixin,
+    RetrieveModelMixin,
+    DestroyModelMixin,
+)
+
 # from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
 # from rest_framework.views import APIView
 # from rest_framework import status
 from store.models import Cart, Collection, OrderItem, Product, Review
-from store.serializers import CartSerializer, CollectionSerializer, ProductSerializer, ReviewSerializer
+from store.serializers import (
+    CartSerializer,
+    CollectionSerializer,
+    ProductSerializer,
+    ReviewSerializer,
+)
 from store.filters import ProductFilter
 from store.pagination import DefaultPagination
 from pprint import pprint
@@ -25,14 +38,14 @@ class ProductViewSet(ModelViewSet):
     filterset_class = ProductFilter
     search_fields = ["title", "description"]
     ordering_fields = ["unit_price", "last_update"]
-    # pagination_class = PageNumberPagination 
-    pagination_class = DefaultPagination 
-    
+    # pagination_class = PageNumberPagination
+    pagination_class = DefaultPagination
+
     def get_serializer_context(self):
         return {"request": self.request}
-    
+
     def destroy(self, request, *args, **kwargs):
-        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+        if OrderItem.objects.filter(product_id=kwargs["pk"]).count() > 0:
             return Response(
                 {
                     "error": "Product cannot be deleted because it is associated with an order item."
@@ -44,42 +57,47 @@ class ProductViewSet(ModelViewSet):
 class CollectionViewSet(ModelViewSet):
     queryset = Collection.objects.annotate(products_count=Count("products")).all()
     serializer_class = CollectionSerializer
-    
+
     def get_serializer_context(self):
         return {"request": self.request}
-    
+
     def destroy(self, request, *args, **kwargs):
-        if Product.objects.filter(collection_id=kwargs['pk']).count() > 0:
+        if Product.objects.filter(collection_id=kwargs["pk"]).count() > 0:
             return Response(
                 {
                     "error": "Collection cannot be deleted because it includes one or more products."
                 }
             )
-            
+
         return super().destroy(request, *args, **kwargs)
 
 
 class ReviewViewSet(ModelViewSet):
     # queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    
+
     #! This is same as defining queryset but since we want the Reviews to be filtered acc to the pk, we will overwrite the default get_queryset()
     def get_queryset(self):
         # print(self.kwargs)
         return Review.objects.filter(product_id=self.kwargs["product_pk"])
-    
+
     #! Since we do not want to pass the product id manually and want it to be taken from the url, pass the url details as context
     def get_serializer_context(self):
         print(self.kwargs)
         return {"product_id": self.kwargs["product_pk"]}
-    
-    
-#? ModelViewSet: A viewset that provides default create(), retrieve(), update(), partial_update(), destroy() and list() actions.
+
+
+# ? ModelViewSet: A viewset that provides default create(), retrieve(), update(), partial_update(), destroy() and list() actions.
 #! Since we only need operations like "Creating a cart", "Getting a cart", "Deleting a cart" using POST, GET using id and DELETE methods, we will not use ModelViewSet because it will provide us with list and update methods which will expose all our data in the API. To prevent this, we will create a custom ViewSet.
-#TODO : Create a custom ViewSet by combining various mixins and generic view set. Click on "ModelViewSet" using "Ctrl+Click" to see its implementation.
+# TODO : Create a custom ViewSet by combining various mixins and generic view set. Click on "ModelViewSet" using "Ctrl+Click" to see its implementation.
 # class CartViewSet(ModelViewSet):
-class CartViewSet(CreateModelMixin,RetrieveModelMixin, GenericViewSet):
-    #* CreateModelMixin: Used to create a model instance using POST method.
-    #* RetrieveModelMixin: Used to retrieve a model instance using GET method.
+class CartViewSet(
+    CreateModelMixin, 
+    RetrieveModelMixin, 
+    DestroyModelMixin, 
+    GenericViewSet
+):
+    # * CreateModelMixin: Used to create a model instance using POST method.
+    # * RetrieveModelMixin: Used to retrieve a model instance using GET method.
     queryset = Cart.objects.prefetch_related("items__product").all()
     serializer_class = CartSerializer
