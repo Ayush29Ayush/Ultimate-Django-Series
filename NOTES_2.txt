@@ -1279,3 +1279,85 @@ class CartViewSet(
     queryset = Cart.objects.prefetch_related("items__product").all()
     serializer_class = CartSerializer
 "
+
+#! Getting Individual Cart Items
+** views.py
+"
+class CartItemViewSet(ModelViewSet):
+    # queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
+    
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related("product")
+"
+** urls.py
+"
+from django.urls import path
+from rest_framework_nested import routers
+from . import views
+from pprint import pprint
+
+router = routers.DefaultRouter()
+
+router.register('products', views.ProductViewSet, basename='products')
+router.register('collections', views.CollectionViewSet)
+router.register('carts', views.CartViewSet)
+
+products_router = routers.NestedDefaultRouter(router, 'products', lookup='product')
+products_router.register('reviews', views.ReviewViewSet, basename='product-reviews')
+
+carts_router = routers.NestedDefaultRouter(router, 'carts', lookup='cart')
+carts_router.register('items', views.CartItemViewSet, basename='cart-items')
+
+urlpatterns = router.urls + products_router.urls + carts_router.urls
+
+pprint(urlpatterns)
+"
+
+#! Adding a Cart Item
+** serializers.py
+"
+class AddCartItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField()
+    
+    #! This is the convention to validate any particular field i.e validate_{field_name}
+    def validate_product_id(self, value):
+        if not Product.objects.filter(pk=value).exists():
+            raise serializers.ValidationError("No product with the given ID was found")
+        return value
+    
+    def save(self, **kwargs):
+        cart_id = self.context["cart_id"]
+        product_id =self.validated_data['product_id']
+        quantity = self.validated_data['quantity']
+        try:
+            cart_item = CartItem.objects.get(cart_id=cart_id, product_id=product_id)
+            cart_item.quantity += quantity
+            cart_item.save()
+            self.instance = cart_item
+        except CartItem.DoesNotExist:
+            self.instance = cart_item = CartItem.objects.create(cart_id=cart_id, **self.validated_data)
+            
+        return self.instance
+    
+    class Meta:
+        model = CartItem
+        fields = ["id",  "product_id", "quantity"]
+"
+** views.py
+"
+class CartItemViewSet(ModelViewSet):
+    # queryset = CartItem.objects.all()
+    # serializer_class = CartItemSerializer
+    
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AddCartItemSerializer
+        return CartItemSerializer
+
+    def get_serializer_context(self):
+        return {'cart_id': self.kwargs['cart_pk']}
+    
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related("product")
+"
