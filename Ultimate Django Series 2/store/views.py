@@ -19,8 +19,9 @@ from rest_framework.response import Response
 
 # from rest_framework.views import APIView
 # from rest_framework import status
-from store.models import Cart, Collection, OrderItem, Product, Review
+from store.models import Cart, CartItem, Collection, OrderItem, Product, Review
 from store.serializers import (
+    CartItemSerializer,
     CartSerializer,
     CollectionSerializer,
     ProductSerializer,
@@ -101,3 +102,11 @@ class CartViewSet(
     # * RetrieveModelMixin: Used to retrieve a model instance using GET method.
     queryset = Cart.objects.prefetch_related("items__product").all()
     serializer_class = CartSerializer
+
+#! Getting Cart Items 
+class CartItemViewSet(ModelViewSet):
+    # queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
+    
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related("product")
