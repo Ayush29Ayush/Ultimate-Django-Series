@@ -1361,3 +1361,37 @@ class CartItemViewSet(ModelViewSet):
     def get_queryset(self):
         return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related("product")
 "
+
+#! Updating a Cart Item 
+** serializers.py
+"
+class UpdateCartItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ["quantity"]
+"
+** views.py
+Add another condition in the if else statement and declare the allowed methods as ["get", "post", "patch", "delete"]
+"
+#! Getting and Updating Cart Items 
+class CartItemViewSet(ModelViewSet):
+    http_method_names = ["get", "post", "patch", "delete"]
+    # queryset = CartItem.objects.all()
+    # serializer_class = CartItemSerializer
+    
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return AddCartItemSerializer
+        elif self.request.method=="PATCH":
+            return UpdateCartItemSerializer
+        return CartItemSerializer
+
+    def get_serializer_context(self):
+        return {'cart_id': self.kwargs['cart_pk']}
+    
+    def get_queryset(self):
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related("product")
+"
+
+#! Deleting a Cart Item
+Already implemented as we are using ModelViewSet in the CartItemViewSet.
