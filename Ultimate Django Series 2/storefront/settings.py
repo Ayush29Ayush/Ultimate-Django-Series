@@ -42,9 +42,9 @@ INSTALLED_APPS = [
     'playground',
     'debug_toolbar',
     'store',
-    'store_custom',
     'tags',
-    'likes'
+    'likes',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -148,3 +148,5 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination', #! for pagination in all views i.e globally set pagination
     # 'PAGE_SIZE': 10 #! for pagination in individual views
 }
+
+AUTH_USER_MODEL = 'core.User'
