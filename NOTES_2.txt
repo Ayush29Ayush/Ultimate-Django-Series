@@ -1395,3 +1395,54 @@ class CartItemViewSet(ModelViewSet):
 
 #! Deleting a Cart Item
 Already implemented as we are using ModelViewSet in the CartItemViewSet.
+
+----------------------------------------------------------------------------------------------------------------------------
+
+#* Section - 5 (Django Authentication System)
+* How the authentication system works
+* User model and customizing it
+* Extending the User model
+* Creating profiles
+* Managing groups and permissions
+
+#! Django Authentication System
+INSTALLED_APPS contains 'django.contrib.auth' and MIDDLEWARE contains 'django.contrib.auth.middleware.AuthenticationMiddleware'
+
+#! Customizing the User model
+There are 2 ways, we can customize the user model
+1. Extend the User model using inheritance. This approach should only be used for storing attributes related to authentication. Ex-> 
+"class AppUser(AbstractUser): 
+    pass
+"
+2. Create profile which is linked one-to-one to each user in the User Model. This approach should be used for storing non-auth related attributes. Ex->   
+"
+class Profile(models.Model):
+    pass
+"
+
+#! Extending the User model
+1. It is not possible to create a new CustomUser model in the middle of the project and use it because our migration files are dependent on the default User model.
+2. The only way to use the CustomUser model in middle of the project is by droping the database and ingesting data again with the new model. 
+
+Steps:-
+* Drop the database and ingest data again
+* Create the new model in core app
+"
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+"
+* Add "AUTH_USER_MODEL = 'core.User'" in settings.py of storefront2 project directory.
+* Change reference from default User model to our new User Model by using "settings.AUTH_USER_MODEL"
+"
+from django.conf import settings
+from django.db import models
+# from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+
+class LikedItem(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+"
