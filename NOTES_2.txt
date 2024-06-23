@@ -1446,3 +1446,80 @@ class LikedItem(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
 "
+
+#! Creating User Profiles
+Make the following changes in the Customer Model:
+"
+class Customer(models.Model):
+    MEMBERSHIP_BRONZE = 'B'
+    MEMBERSHIP_SILVER = 'S'
+    MEMBERSHIP_GOLD = 'G'
+
+    MEMBERSHIP_CHOICES = [
+        (MEMBERSHIP_BRONZE, 'Bronze'),
+        (MEMBERSHIP_SILVER, 'Silver'),
+        (MEMBERSHIP_GOLD, 'Gold'),
+    ]
+    # first_name = models.CharField(max_length=255)
+    # last_name = models.CharField(max_length=255)
+    # email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=255)
+    birth_date = models.DateField(null=True, blank=True)
+    membership = models.CharField(
+        max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_BRONZE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name}'
+    
+    @admin.display(ordering='user__first_name')
+    def first_name(self):
+        return self.user.first_name
+    
+    @admin.display(ordering='user__last_name')
+    def last_name(self):
+        return self.user.last_name
+
+    class Meta:
+        ordering = ['user__first_name', 'user__last_name']
+"
+and add the following changes in CustomerAdmin: 
+"
+@admin.register(models.Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ['first_name', 'last_name',  'membership', 'orders']
+    list_editable = ['membership']
+    list_per_page = 10
+    list_select_related = ['user']
+    ordering = ['user__first_name', 'user__last_name']
+    search_fields = ['first_name__istartswith', 'last_name__istartswith']
+"
+
+#! Groups and Permissions
+1. Rather than handling each user individually, we can add them to a group and assign permissions to them.
+2. Then go to any particular user and assign that user to a group.
+3. Now login using that user's credentials and you will see that that user has access to only the models which are in that group with certain permissions.
+
+#! Creating Custom Permissions
+1. We can also add permissions in our models directly.
+"
+class Order(models.Model):
+    PAYMENT_STATUS_PENDING = 'P'
+    PAYMENT_STATUS_COMPLETE = 'C'
+    PAYMENT_STATUS_FAILED = 'F'
+    PAYMENT_STATUS_CHOICES = [
+        (PAYMENT_STATUS_PENDING, 'Pending'),
+        (PAYMENT_STATUS_COMPLETE, 'Complete'),
+        (PAYMENT_STATUS_FAILED, 'Failed')
+    ]
+
+    placed_at = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(
+        max_length=1, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_PENDING)
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT)
+    
+    class Meta:
+        permissions = [
+            ('cancel_order', 'Can cancel order')
+        ]
+"
