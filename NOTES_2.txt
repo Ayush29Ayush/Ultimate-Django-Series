@@ -1523,3 +1523,56 @@ class Order(models.Model):
             ('cancel_order', 'Can cancel order')
         ]
 "
+
+#* Section - 6 (Securing APIs)
+* Token-based authentication
+* Adding authentication endpoints
+* Registering, logging in, etc.
+* Applying permissions
+
+#! Token based authentication
+* Let's say the user wants to go to "http://localhost:8000/api/products/", then another request will be sent to "http://localhost:8000/api/auth/" with will check the username and passsword of that user, if that is correct then a token will be returned. Using that token, the user can make any other request to the API.
+
+#! Adding the Authentication Endpoints 
+* We know that django comes with an fully-fledged authentication system but this system does not include any api layer i.e endpoints for the user to login, register, etc. We only have a bunch of models, database tables, etc. Now we can build this layer by hand but it will be difficult to maintain it and repetitive.
+* Instead we will use DJOSER package to add authentication endpoints. It provides views for user registration, login, logout, etc.
+#TODO -> "https://djoser.readthedocs.io/en/latest/index.html"
+* pip install -U djoser
+* Add 'djoser' in INSTALLED_APPS in settings.py
+* Add 'path('auth/', include('djoser.urls')),' to urls.py of the project directory.
+Now to implement AUTH ENGINES, we have 2 choices:
+a) Token-based authentication which stores token in the database and validates token in every request. This sends request to the backend everytime to validate the token.
+b) JSON Web Token authentication which stores a digital signature as token in the browser and validates token in every request. This sends request to the backend only when the token is valid.
+* We will use JSON Web Token authentication in our project.
+* pip install -U djangorestframework_simplejwt
+* Add the following code in settings.py
+"
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+   'AUTH_HEADER_TYPES': ('JWT',),
+}
+"
+
+Available endpoints:
+    /users/
+    /users/me/
+    /users/confirm/
+    /users/resend_activation/
+    /users/set_password/
+    /users/reset_password/
+    /users/reset_password_confirm/
+    /users/set_username/
+    /users/reset_username/
+    /users/reset_username_confirm/
+
+    /token/login/ (Token Based Authentication)
+    /token/logout/ (Token Based Authentication)
+    /jwt/create/ (JSON Web Token Authentication)
+    /jwt/refresh/ (JSON Web Token Authentication)
+    /jwt/verify/ (JSON Web Token Authentication)
+
