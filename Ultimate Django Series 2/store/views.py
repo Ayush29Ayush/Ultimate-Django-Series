@@ -10,6 +10,7 @@ from rest_framework.mixins import (
     CreateModelMixin,
     RetrieveModelMixin,
     DestroyModelMixin,
+    UpdateModelMixin,
 )
 
 # from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -19,12 +20,21 @@ from rest_framework.response import Response
 
 # from rest_framework.views import APIView
 # from rest_framework import status
-from store.models import Cart, CartItem, Collection, OrderItem, Product, Review
+from store.models import (
+    Cart,
+    CartItem,
+    Collection,
+    Customer,
+    OrderItem,
+    Product,
+    Review,
+)
 from store.serializers import (
     AddCartItemSerializer,
     CartItemSerializer,
     CartSerializer,
     CollectionSerializer,
+    CustomerSerializer,
     ProductSerializer,
     ReviewSerializer,
     UpdateCartItemSerializer,
@@ -95,31 +105,39 @@ class ReviewViewSet(ModelViewSet):
 # TODO : Create a custom ViewSet by combining various mixins and generic view set. Click on "ModelViewSet" using "Ctrl+Click" to see its implementation.
 # class CartViewSet(ModelViewSet):
 class CartViewSet(
-    CreateModelMixin, 
-    RetrieveModelMixin, 
-    DestroyModelMixin, 
-    GenericViewSet
+    CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet
 ):
     # * CreateModelMixin: Used to create a model instance using POST method.
     # * RetrieveModelMixin: Used to retrieve a model instance using GET method.
     queryset = Cart.objects.prefetch_related("items__product").all()
     serializer_class = CartSerializer
 
-#! Getting and Updating Cart Items 
+
+#! Getting and Updating Cart Items
 class CartItemViewSet(ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
     # queryset = CartItem.objects.all()
     # serializer_class = CartItemSerializer
-    
+
     def get_serializer_class(self):
         if self.request.method == "POST":
             return AddCartItemSerializer
-        elif self.request.method=="PATCH":
+        elif self.request.method == "PATCH":
             return UpdateCartItemSerializer
         return CartItemSerializer
 
     def get_serializer_context(self):
-        return {'cart_id': self.kwargs['cart_pk']}
-    
+        return {"cart_id": self.kwargs["cart_pk"]}
+
     def get_queryset(self):
-        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related("product")
+        return CartItem.objects.filter(cart_id=self.kwargs["cart_pk"]).select_related(
+            "product"
+        )
+
+
+#! Since we do not want to list all the customers, we will not use ModelViewSet but rather mixture of mixins and generic view set.
+class CustomerViewSet(
+    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
