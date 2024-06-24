@@ -1576,3 +1576,102 @@ Available endpoints:
     /jwt/refresh/ (JSON Web Token Authentication)
     /jwt/verify/ (JSON Web Token Authentication)
 
+#! Registering Users
+When you go to "http://127.0.0.1:8000/auth/users/", we get
+"
+HTTP 401 Unauthorized
+Allow: GET, POST, HEAD, OPTIONS
+Content-Type: application/json
+Vary: Accept
+WWW-Authenticate: JWT realm="api"
+
+{
+    "detail": "Authentication credentials were not provided."
+}
+"
+Here we can see that it accepts POST request, so we can register a new user.
+When I send post request with body
+"
+{
+    "email": "user1@domain.com",
+    "username": "user1",
+    "password": "1234"
+}
+"
+I get 400 Bad request
+"
+HTTP 400 Bad Request
+Allow: GET, POST, HEAD, OPTIONS
+Content-Type: application/json
+Vary: Accept
+
+{
+    "password": [
+        "This password is too short. It must contain at least 8 characters.",
+        "This password is too common.",
+        "This password is entirely numeric."
+    ]
+}
+"
+So provide a good password and a new user wwill be registered.
+
+#TODO -> How to send first_name and last_name in POST request?
+Ans) We need to have a custom serializer to send the first_name and last_name in POST request.
+
+#TODO -> Refer => "https://djoser.readthedocs.io/en/latest/settings.html#serializers"
+#TODO -> Refer => "https://stackoverflow.com/questions/49095424/customize-the-djoser-create-user-endpoint"
+
+#? These are the default serializers provided by djoser
+"
+{
+    'activation': 'djoser.serializers.ActivationSerializer',
+    'password_reset': 'djoser.serializers.SendEmailResetSerializer',
+    'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
+    'password_reset_confirm_retype': 'djoser.serializers.PasswordResetConfirmRetypeSerializer',
+    'set_password': 'djoser.serializers.SetPasswordSerializer',
+    'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
+    'set_username': 'djoser.serializers.SetUsernameSerializer',
+    'set_username_retype': 'djoser.serializers.SetUsernameRetypeSerializer',
+    'username_reset': 'djoser.serializers.SendEmailResetSerializer',
+    'username_reset_confirm': 'djoser.serializers.UsernameResetConfirmSerializer',
+    'username_reset_confirm_retype': 'djoser.serializers.UsernameResetConfirmRetypeSerializer',
+    'user_create': 'djoser.serializers.UserCreateSerializer',
+    'user_create_password_retype': 'djoser.serializers.UserCreatePasswordRetypeSerializer',
+    'user_delete': 'djoser.serializers.UserDeleteSerializer',
+    'user': 'djoser.serializers.UserSerializer',
+    'current_user': 'djoser.serializers.UserSerializer',
+    'token': 'djoser.serializers.TokenSerializer',
+    'token_create': 'djoser.serializers.TokenCreateSerializer',
+}
+"
+
+* Step-1: Create a custom serializer in serializers.py from core app
+"
+from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
+
+
+class UserCreateSerializer(BaseUserCreateSerializer):
+    class Meta(BaseUserCreateSerializer.Meta):
+        fields = ["id", "username", "password", "email", "first_name", "last_name"]
+
+"
+* Step-2: Add the custom serializer in settings.py of the project i.e storefront2
+"
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'core.serializers.UserCreateSerializer',  
+    }
+}
+"
+Now when you go to "http://127.0.0.1:8000/auth/users/", we get
+"
+{
+    "username": "",
+    "password": "",
+    "email": "",
+    "first_name": "",
+    "last_name": ""
+}
+"
+
+#! EACH COMPONENT SHOULD HAVE A SINGLE RESPONSIBILITY
