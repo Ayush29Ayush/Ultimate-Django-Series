@@ -1675,3 +1675,76 @@ Now when you go to "http://127.0.0.1:8000/auth/users/", we get
 "
 
 #! EACH COMPONENT SHOULD HAVE A SINGLE RESPONSIBILITY
+
+#! Building the Profile API
+DJOSER does not have a profile API, it just focuses on authentication. So we need to build it from scratch ourselves.
+** serializer.py
+"
+class CustomerSerializer(serializers.ModelSerializer):
+    #! We want user_id to also be present in the body of the request so declare it here
+    user_id = serializers.IntegerField()
+    class Meta:
+        model = Customer
+        #! Here we need user's id but that is a foreign key relation so we write user_id
+        fields = ["id", "user_id", "phone", "birth_date", "membership"]
+"
+
+** views.py
+"
+#! Since we do not want to list all the customers, we will not use ModelViewSet but rather mixture of mixins and generic view set.
+class CustomerViewSet(
+    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+"
+
+** urls.py
+"
+router.register('customers', views.CustomerViewSet)
+"
+
+#! Logging in (Authenticating Users)
+Go to "http://127.0.0.1:8000/auth/jwt/create/", we get
+"
+{
+    "username": "",
+    "password": ""
+}
+"
+If you send wrong username or password, you will get an error but for correct username and password, you will get a refresh and access token.
+"
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcxOTMzNTYwNywiaWF0IjoxNzE5MjQ5MjA3LCJqdGkiOiI3OTFjNjRhYjJiZTY0OGM5OTY4OTc0NTlhMmFjYTM0MCIsInVzZXJfaWQiOjN9.qQvi67f5bD6uQbJ_oVaVmAEx7gr7GHpbPISbCDJuqog",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzE5MjQ5NTA3LCJpYXQiOjE3MTkyNDkyMDcsImp0aSI6IjlhMmUyMzMwNjE4YzQ4ZDE5ODkyYWQ0ZGNmNjIzMGM1IiwidXNlcl9pZCI6M30.i5o8QYoKRCOMmH5iPr5IIWJWd_c13Y81MoSNxDwwmXg"
+}
+"
+
+* The access token is used to access the API.
+* When the token is expired, we can refresh and get a new token using the refresh token.
+
+* By default, the access token is valid for 5 minutes and the refresh token is valid for 1 day but we can easily overwrite these settings
+
+#TODO -> "https://django-rest-framework-simplejwt.readthedocs.io/en/latest/index.html"
+#TODO -> "https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html"
+
+*You can change this by adding "ACCESS_TOKEN_LIFETIME" and "REFRESH_TOKEN_LIFETIME" in settings.py
+
+* Add this to settings.py
+"
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=10), #! Now the access token is valid for 10 days
+}
+"
+
+After sending a POST request to "auth/jwt/create/", we get
+"
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcxOTMzNzI2NSwiaWF0IjoxNzE5MjUwODY1LCJqdGkiOiIyZTIxNTBjM2E2ZjI0MGU2OGQ0NTg1MjBlNjQ2MTQyNiIsInVzZXJfaWQiOjN9.lvA29ftKbxIkLckWCPaqpWPwhD8fRpZ4NcZajBqLnYE",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIwMTE0ODY1LCJpYXQiOjE3MTkyNTA4NjUsImp0aSI6IjYxZjMyMjdkYjQ0NDQ1N2I5NGY1MGQyMjM3OWI3NDg1IiwidXNlcl9pZCI6M30.i7yDMstftNKd1l2_VMtcTN7e_UentEn3aUIH_fnnyxo"
+}
+"
+* When the user logs in successfully, we store the token in the local storage and to logout the user, just remove the token from the local storage.
+
+#! Inspecting the JWT token
+* Go to "https://jwt.io/" and paste your access and refresh token.
