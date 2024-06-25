@@ -98,7 +98,7 @@ class UpdateCartItemSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     #! We want user_id to also be present in the body of the request so declare it here
-    user_id = serializers.IntegerField()
+    user_id = serializers.IntegerField(read_only=True)
     class Meta:
         model = Customer
         #! Here we need user's id but that is a foreign key relation so we write user_id
