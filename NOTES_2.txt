@@ -1748,3 +1748,89 @@ After sending a POST request to "auth/jwt/create/", we get
 
 #! Inspecting the JWT token
 * Go to "https://jwt.io/" and paste your access and refresh token.
+
+#! Refreshing the JWT token
+* Go to "http://127.0.0.1:8000/auth/jwt/refresh/" and paste your refresh token. You will get a new access token.
+
+#! Getting the current user
+* Go to "http://127.0.0.1:8000/auth/users/me/", you will get:
+"
+HTTP 401 Unauthorized
+Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
+Content-Type: application/json
+Vary: Accept
+WWW-Authenticate: JWT realm="api"
+
+{
+    "detail": "Authentication credentials were not provided."
+}
+"
+* Install Modheader extension for Chrome, and set "Authorization: JWT <access token>" in the request header because we have used the following settings
+"
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=10),
+}
+"
+* After doing so go to "auth/users/me/" and you will get the user details
+"
+HTTP 200 OK
+Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
+Content-Type: application/json
+Vary: Accept
+
+{
+    "email": "user1@domain.com",
+    "id": 3,
+    "username": "user1"
+}
+"
+* Now we want first_name and last_name in the response. So we will overwrite the default serializer to get the user details. To know which serializer to overwrite, go to "https://djoser.readthedocs.io/en/latest/settings.html"
+"
+{
+    'activation': 'djoser.serializers.ActivationSerializer',
+    'password_reset': 'djoser.serializers.SendEmailResetSerializer',
+    'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
+    'password_reset_confirm_retype': 'djoser.serializers.PasswordResetConfirmRetypeSerializer',
+    'set_password': 'djoser.serializers.SetPasswordSerializer',
+    'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
+    'set_username': 'djoser.serializers.SetUsernameSerializer',
+    'set_username_retype': 'djoser.serializers.SetUsernameRetypeSerializer',
+    'username_reset': 'djoser.serializers.SendEmailResetSerializer',
+    'username_reset_confirm': 'djoser.serializers.UsernameResetConfirmSerializer',
+    'username_reset_confirm_retype': 'djoser.serializers.UsernameResetConfirmRetypeSerializer',
+    'user_create': 'djoser.serializers.UserCreateSerializer',
+    'user_create_password_retype': 'djoser.serializers.UserCreatePasswordRetypeSerializer',
+    'user_delete': 'djoser.serializers.UserDeleteSerializer',
+    'user': 'djoser.serializers.UserSerializer',
+    'current_user': 'djoser.serializers.UserSerializer',
+    'token': 'djoser.serializers.TokenSerializer',
+    'token_create': 'djoser.serializers.TokenCreateSerializer',
+}
+"
+* We can observe that the 'current_user' key has a certain serializer. We need to overwrite that.
+* Step-1: Go to core.serializers and create a new serializer.
+"
+from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer, UserSerializer as BaseUserSerializer
+from rest_framework import serializers
+
+
+class UserCreateSerializer(BaseUserCreateSerializer):
+    class Meta(BaseUserCreateSerializer.Meta):
+        fields = ["id", "username", "password", "email", "first_name", "last_name"]
+
+
+class UserSerializer(BaseUserSerializer):
+    class Meta(BaseUserSerializer.Meta):
+        fields = ["id", "username", "email", "first_name", "last_name"]
+"
+* Step-2: Register this serializer in the settings.py of the project i.e storefront2
+"
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'core.serializers.UserCreateSerializer',  
+        'current_user': 'core.serializers.UserSerializer',
+    }
+}
+"
+* 
