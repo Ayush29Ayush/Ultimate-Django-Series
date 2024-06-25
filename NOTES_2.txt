@@ -1833,4 +1833,95 @@ DJOSER = {
     }
 }
 "
-* 
+
+#! Getting the current user's profile
+We want a route "store/customers/me" which should give the current user's profile
+For that, we need @actions decorators
+
+** views
+"
+#! This is a demo action
+class CustomerViewSet(
+    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+
+    @action(detail=False)
+    def me(self, request):
+        return Response('Ok')
+"
+
+@action decorator and me method
+The @action decorator allows you to add custom endpoints to your viewset. The me method in this viewset is a custom action.
+
+detail=False: This means that this action does not operate on a single instance but rather on the entire collection like "store/customers/me". Typically, detail=True would be used for actions that act on a single object like "store/customers/1/me".
+
+me method: This method is a custom endpoint that can be accessed via the URL pattern /customers/me/. Currently, it simply returns a response with the text 'Ok'.
+
+** serializers.py (defined before)
+"
+class CustomerSerializer(serializers.ModelSerializer):
+    #! We want user_id to also be present in the body of the request so declare it here
+    user_id = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = Customer
+        #! Here we need user's id but that is a foreign key relation so we write user_id
+        fields = ["id", "user_id", "phone", "birth_date", "membership"]
+"
+** views.py
+"
+#! Since we do not want to list all the customers, we will not use ModelViewSet but rather mixture of mixins and generic view set.
+class CustomerViewSet(
+    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+
+    #! If the user is authenticated, we will get USER instance else AnonymousUser instance
+    @action(detail=False, methods=["GET", "PUT"])
+    def me(self, request):
+        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        if request.method == "GET":
+            print(request.user)
+            serializer = CustomerSerializer(customer)
+            return Response(serializer.data)
+        elif request.method == "PUT":
+            serializer = CustomerSerializer(customer, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+"
+
+#! Applying Django Permissions
+* Use permission_classes in views or we can use decorators
+** views.py
+"
+class CustomerViewSet(
+    CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet
+):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    #! Here we are overwriting the get_permissions() method according to the request method
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    #! If the user is authenticated, we will get USER instance else AnonymousUser instance
+    @action(detail=False, methods=["GET", "PUT"])
+    def me(self, request):
+        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        if request.method == "GET":
+            print(request.user)
+            serializer = CustomerSerializer(customer)
+            return Response(serializer.data)
+        elif request.method == "PUT":
+            serializer = CustomerSerializer(customer, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+"
+* We can also add DEFAULT_PERMISSION_CLASSES in settings.py for setting global permissions.
