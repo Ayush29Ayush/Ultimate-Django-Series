@@ -1942,3 +1942,123 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 "
 * Now apply these permissions in required viewsets present in views.py
+
+#! Applying Model Permissions
+* Create a permission in permissions.py
+"
+class FullDjangoModelPermissions(permissions.DjangoModelPermissions):
+    def __init__(self):
+        self.perms_map["GET"] = ["%(app_label)s.view_%(model_name)s"]
+"
+
+
+#! Applying Custom Model Permissions
+* Check Permissions from Meta class of Model
+
+** models.py
+"
+class Customer(models.Model):
+    MEMBERSHIP_BRONZE = 'B'
+    MEMBERSHIP_SILVER = 'S'
+    MEMBERSHIP_GOLD = 'G'
+
+    MEMBERSHIP_CHOICES = [
+        (MEMBERSHIP_BRONZE, 'Bronze'),
+        (MEMBERSHIP_SILVER, 'Silver'),
+        (MEMBERSHIP_GOLD, 'Gold'),
+    ]
+    # first_name = models.CharField(max_length=255)
+    # last_name = models.CharField(max_length=255)
+    # email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=255)
+    birth_date = models.DateField(null=True, blank=True)
+    membership = models.CharField(
+        max_length=1, choices=MEMBERSHIP_CHOICES, default=MEMBERSHIP_BRONZE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name}'
+    
+    @admin.display(ordering='user__first_name')
+    def first_name(self):
+        return self.user.first_name
+    
+    @admin.display(ordering='user__last_name')
+    def last_name(self):
+        return self.user.last_name
+
+    class Meta:
+        ordering = ['user__first_name', 'user__last_name']
+        permissions = [
+            ('view_history', 'Can View History'),
+        ]
+"
+
+** permissions.py
+"
+class ViewCustomerHistoryPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('store.view_history')
+"
+
+** views.py
+"
+class CustomerViewSet(ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAdminUser]
+    
+    @action(detail=True, permission_classes=[ViewCustomerHistoryPermission])
+    def history(self, request, pk):
+        return Response("OK")
+
+    #! If the user is authenticated, we will get USER instance else AnonymousUser instance
+    @action(detail=False, methods=["GET", "PUT"], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        if request.method == "GET":
+            print(request.user)
+            serializer = CustomerSerializer(customer)
+            return Response(serializer.data)
+        elif request.method == "PUT":
+            serializer = CustomerSerializer(customer, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+"
+
+#* Section - 7 (Building the Orders API)
+
+#! Designing the Orders API
+* Method
+* url endpoints
+* request body
+* response body
+
+a) Orders Endpoint
+* Method - POST
+* url endpoint - /store/orders/
+* request body - {cartId}
+* response body - order object
+
+* Method - GET
+* url endpoint - /store/orders/
+* request body - None
+* response body - order object
+
+* Method - GET
+* url endpoint - /store/orders/{id}/
+* request body - None
+* response body - order object for that order id
+
+* Method - PATCH
+* url endpoint - /store/orders/{id}/
+* request body - updated data
+* response body - order object for that order id
+
+* Method - DELETE
+* url endpoint - /store/orders/{id}/
+* request body - None
+* response body - None
+
+#! Getting the Orders
