@@ -15,7 +15,7 @@ from rest_framework.mixins import (
 )
 
 # from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, DjangoModelPermissions
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -43,7 +43,7 @@ from store.serializers import (
 )
 from store.filters import ProductFilter
 from store.pagination import DefaultPagination
-from store.permissions import IsAdminOrReadOnly
+from store.permissions import FullDjangoModelPermissions, IsAdminOrReadOnly, ViewCustomerHistoryPermission
 from pprint import pprint
 
 
@@ -145,11 +145,9 @@ class CustomerViewSet(ModelViewSet):
     serializer_class = CustomerSerializer
     permission_classes = [IsAdminUser]
     
-    #! Here we are overwriting the get_permissions() method according to the request method
-    # def get_permissions(self):
-    #     if self.request.method == "GET":
-    #         return [AllowAny()]
-    #     return [IsAuthenticated()]
+    @action(detail=True, permission_classes=[ViewCustomerHistoryPermission])
+    def history(self, request, pk):
+        return Response("OK")
 
     #! If the user is authenticated, we will get USER instance else AnonymousUser instance
     @action(detail=False, methods=["GET", "PUT"], permission_classes=[IsAuthenticated])
