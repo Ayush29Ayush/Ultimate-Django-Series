@@ -2196,3 +2196,42 @@ class OrderViewSet(ModelViewSet):
         (customer_id, created) = Customer.objects.only("id").get_or_create(user_id=user.id)
         return Order.objects.filter(customer_id=customer_id)
 "
+
+#! Creating Order Items
+** serializers.py
+"
+class CreateOrderSerializer(serializers.Serializer):
+    cart_id = serializers.UUIDField()
+
+    def save(self, **kwargs):
+        with transaction.atomic():
+            print(self.validated_data["cart_id"])
+            #! Since this is a serializer, we cannot access self.request here, so we will do so and get the user_id from the view itself
+            print(self.context["user_id"])
+            
+            cart_id = self.validated_data["cart_id"]
+            # Here get the customer which matches the user_id, or create one if it doesn't exist
+            (customer, created) = Customer.objects.get_or_create(user_id=self.context["user_id"])
+            
+            # Now get the items present in the cart
+            cart_items = CartItem.objects.select_related("product").filter(cart_id=cart_id)
+            
+            # Now for that customer, place the order (DIM Table)
+            order = Order.objects.create(customer=customer)
+            
+            # Get the order items to place in the order from the cart. OrderItem (Fact Table)
+            order_items = [
+                OrderItem(
+                    order=order,
+                    product=item.product,
+                    unit_price=item.product.unit_price,
+                    quantity=item.quantity,
+                )
+                for item in cart_items
+            ]
+            print("order_items", order_items)
+            # Bulk create the order items
+            OrderItem.objects.bulk_create(order_items)
+            # After creating the order, delete the cart
+            Cart.objects.filter(pk=cart_id).delete()
+"
