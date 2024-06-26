@@ -27,6 +27,7 @@ from store.models import (
     CartItem,
     Collection,
     Customer,
+    Order,
     OrderItem,
     Product,
     Review,
@@ -37,6 +38,7 @@ from store.serializers import (
     CartSerializer,
     CollectionSerializer,
     CustomerSerializer,
+    OrderSerializer,
     ProductSerializer,
     ReviewSerializer,
     UpdateCartItemSerializer,
@@ -163,3 +165,7 @@ class CustomerViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         
+
+class OrderViewSet(ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
