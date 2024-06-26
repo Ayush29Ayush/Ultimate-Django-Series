@@ -2128,3 +2128,71 @@ class OrderViewSet(ModelViewSet):
 "
 router.register('orders', views.OrderViewSet)
 "
+
+#! Applying Permissions
+** views.py
+"
+class OrderViewSet(ModelViewSet):
+    # queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_staff:
+            return Order.objects.all()
+         
+        (customer_id, created) = Customer.objects.only("id").get_or_create(user_id=user.id)
+        return Order.objects.filter(customer_id=customer_id)
+"
+
+** urls.py
+"
+router.register('orders', views.OrderViewSet, basename='orders')
+"
+
+#! Creating an Order
+* Since for POST request, we will only send CartId, we can not use ModelSerializer
+* Create a new serializer but without using ModelSerializer, we will use Serializer
+#? Just try to think logically, first we will send the cartId, then the order of the logged in user should be placed/created. The logged in user is the customer.
+** serializers.py
+"
+class CreateOrderSerializer(serializers.Serializer):
+    cart_id = serializers.UUIDField()
+    
+    def save(self, **kwargs):
+        print(self.validated_data['cart_id'])
+        #! Since this is a serializer, we cannot access self.request here, so we will do so and get the user_id from the view itself
+        print(self.context["user_id"])
+        
+        (customer,created) = Customer.objects.get_or_create(user_id=self.context["user_id"])
+        
+        Order.objects.create(customer=customer)
+"
+
+** views.py
+"
+class OrderViewSet(ModelViewSet):
+    # queryset = Order.objects.all()
+    # serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateOrderSerializer
+        return OrderSerializer
+        
+    
+    def get_serializer_context(self):
+        return {'user_id': self.request.user.id}
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_staff:
+            return Order.objects.all()
+         
+        (customer_id, created) = Customer.objects.only("id").get_or_create(user_id=user.id)
+        return Order.objects.filter(customer_id=customer_id)
+"
