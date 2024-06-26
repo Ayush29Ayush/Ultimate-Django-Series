@@ -1925,3 +1925,20 @@ class CustomerViewSet(
             return Response(serializer.data)
 "
 * We can also add DEFAULT_PERMISSION_CLASSES in settings.py for setting global permissions.
+
+#! Creating Custom Permissions
+* Go to "https://www.django-rest-framework.org/api-guide/permissions/"
+* We see that there is no API reference named "IsAdminOrReadOnly" so we will create one.
+* Create a permissions.py in store app
+"
+from rest_framework import permissions
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_staff)
+
+"
+* Now apply these permissions in required viewsets present in views.py
