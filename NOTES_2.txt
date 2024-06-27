@@ -2311,3 +2311,79 @@ class OrderViewSet(ModelViewSet):
         (customer_id, created) = Customer.objects.only("id").get_or_create(user_id=user.id)
         return Order.objects.filter(customer_id=customer_id)
 "
+
+#! Data Validation
+* Whenever we create a new order using the cart_id, a order always gets created even when there are no items in the cart.
+* To fix this, we need to add validation for cart_id
+* Add this to CreateOrderSerializer
+"
+def validate_cart_id(self, cart_id):
+        #! If the user is using any old cart_id which is already deleted from the database, we will raise an error
+        if not Cart.objects.filter(pk=cart_id).exists():
+            raise serializers.ValidationError('No cart with the given ID was found.')
+        #! If the cart is empty, we will raise an error
+        if CartItem.objects.filter(cart_id=cart_id).count() == 0:
+            raise serializers.ValidationError('The cart is empty.')
+        return cart_id
+"
+
+#! Revisiting Permissions for the OrderViewSet
+* Now only the admin can do CRUD operations and the authenticated user can only do read operations
+** views.py
+"
+class OrderViewSet(ModelViewSet):
+    # queryset = Order.objects.all()
+    # serializer_class = OrderSerializer
+    # permission_classes = [IsAuthenticated]
+    
+    http_method_names = ["get", "patch", "delete", 'head', 'options']
+    def  get_permissions(self):
+        if self.request.method in ['PATCH', 'DELETE']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+    
+    #! Here we are overwriting the creatte method from the create model mixin
+    def create(self, request, *args, **kwargs):
+        serializer = CreateOrderSerializer(data=request.data, context={"user_id": request.user.id}) 
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+    
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateOrderSerializer
+        return OrderSerializer
+        
+    
+    # def get_serializer_context(self):
+    #     return {'user_id': self.request.user.id}
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_staff:
+            return Order.objects.all()
+         
+        (customer_id, created) = Customer.objects.only("id").get_or_create(user_id=user.id)
+        return Order.objects.filter(customer_id=customer_id)
+"
+
+#! Updating the Order
+** serializers.py
+"
+class UpdateOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['payment_status']
+"
+
+** views.py (Add PATCH condition in the get_serializer_class of OrderViewSet)
+"
+def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateOrderSerializer
+        elif self.request.method == "PATCH":
+            return UpdateOrderSerializer
+        return OrderSerializer
+"
