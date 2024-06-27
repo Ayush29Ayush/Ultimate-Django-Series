@@ -2387,3 +2387,46 @@ def get_serializer_class(self):
             return UpdateOrderSerializer
         return OrderSerializer
 "
+
+#! Signals
+* Django signals are a powerful feature that allows decoupled applications to get notified when certain actions occur elsewhere in the application. They provide a way to perform operations in response to events. This is especially useful for triggering functions to run automatically after certain actions, such as saving a model instance or sending an email when a new user registers.
+* Django provides several built-in signals, such as pre_save, post_save, pre_delete, post_delete, m2m_changed, etc.
+
+Now we want that when a user is created, a customer should be created as well. Right now we were using get_or_create as a hack but this is not a correct approach as we were creating dummy customer if it did not exist.
+
+To solve this, we will use signals and create a customer as soon as the user is created.
+
+* Create a signals.py in the store app
+** signals.py
+"
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from store.models import Customer
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_customer_for_new_user(sender, **kwargs):
+    if kwargs['created']:
+        Customer.objects.create(user=kwargs['instance'])
+"
+* Now add this to apps.py of the store app
+** apps.py
+"
+from django.apps import AppConfig
+
+
+class StoreConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'store'
+
+    def ready(self) -> None:
+        import store.signals
+"
+* Now replace get_or_create with just get in all the implementations
+
+#! Using Custom Signals
+* Created a signals folder and moved the signals.py inside it.
+* Renamed the signals.py to handlers.py and we defined handlers inside the file
+* Implemented it for store and core app
+
+-------------------------------------------------------------------------THE END-------------------------------------------------------------------------
