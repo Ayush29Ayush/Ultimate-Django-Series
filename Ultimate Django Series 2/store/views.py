@@ -170,7 +170,13 @@ class CustomerViewSet(ModelViewSet):
 class OrderViewSet(ModelViewSet):
     # queryset = Order.objects.all()
     # serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    
+    http_method_names = ["get", "patch", "delete", 'head', 'options']
+    def  get_permissions(self):
+        if self.request.method in ['PATCH', 'DELETE']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
     
     #! Here we are overwriting the creatte method from the create model mixin
     def create(self, request, *args, **kwargs):
