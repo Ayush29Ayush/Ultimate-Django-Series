@@ -156,7 +156,8 @@ class CustomerViewSet(ModelViewSet):
     #! If the user is authenticated, we will get USER instance else AnonymousUser instance
     @action(detail=False, methods=["GET", "PUT"], permission_classes=[IsAuthenticated])
     def me(self, request):
-        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        # (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        customer = Customer.objects.get(user_id=request.user.id)
         if request.method == "GET":
             print(request.user)
             serializer = CustomerSerializer(customer)
@@ -173,13 +174,13 @@ class OrderViewSet(ModelViewSet):
     # serializer_class = OrderSerializer
     # permission_classes = [IsAuthenticated]
     
-    http_method_names = ["get", "patch", "delete", 'head', 'options']
-    def  get_permissions(self):
+    http_method_names = ["get", "post", "patch", "delete", 'head', 'options']
+    def get_permissions(self):
         if self.request.method in ['PATCH', 'DELETE']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
     
-    #! Here we are overwriting the creatte method from the create model mixin
+    #! Here we are overwriting the create method from the create model mixin
     def create(self, request, *args, **kwargs):
         serializer = CreateOrderSerializer(data=request.data, context={"user_id": request.user.id}) 
         serializer.is_valid(raise_exception=True)
@@ -204,5 +205,5 @@ class OrderViewSet(ModelViewSet):
         if user.is_staff:
             return Order.objects.all()
          
-        (customer_id, created) = Customer.objects.only("id").get_or_create(user_id=user.id)
+        customer_id = Customer.objects.only("id").get(user_id=user.id)
         return Order.objects.filter(customer_id=customer_id)

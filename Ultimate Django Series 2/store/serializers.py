@@ -11,7 +11,7 @@ from store.models import (
     Collection,
     Review,
 )
-
+from store.signals import order_created 
 
 class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -173,7 +173,8 @@ class CreateOrderSerializer(serializers.Serializer):
             
             cart_id = self.validated_data["cart_id"]
             # Here get the customer which matches the user_id, or create one if it doesn't exist
-            (customer, created) = Customer.objects.get_or_create(user_id=self.context["user_id"])
+            # (customer, created) = Customer.objects.get_or_create(user_id=self.context["user_id"])
+            customer = Customer.objects.get(user_id=self.context["user_id"])
             
             # Now get the items present in the cart
             cart_items = CartItem.objects.select_related("product").filter(cart_id=cart_id)
@@ -196,4 +197,7 @@ class CreateOrderSerializer(serializers.Serializer):
             OrderItem.objects.bulk_create(order_items)
             # After creating the order, delete the cart
             Cart.objects.filter(pk=cart_id).delete()
+            
+            order_created.send_robust(sender=self.__class__, order=order)
+            
             return order
