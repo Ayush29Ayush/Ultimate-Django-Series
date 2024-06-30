@@ -1,0 +1,85 @@
+#! Setting Up the Project and Database
+1. Open MySQL Workbench and create a new database named storefront3.
+2. Run "python manage.py makemigrations" and "python manage.py migrate" to create the tables in the database.
+3. Now rather than using the seed.sql directly to import the data in the database using the SQL Workbench, we will use a custom command.
+4. Create a custom command named "seed_db" my creating a management folder followed by a commands folder inside the store app. 
+5. Write the following code in seed_db.py and place seed.sql file in the same directory.
+"
+#! CUSTOM COMMAND TO POPULATE THE DATABASE
+from django.core.management.base import BaseCommand
+from django.db import connection
+from pathlib import Path
+import os
+
+
+class Command(BaseCommand):
+    help = 'Populates the database with collections and products'
+
+    def handle(self, *args, **options):
+        print('Populating the database...')
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, 'seed.sql')
+        sql = Path(file_path).read_text()
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+
+"
+6. Now in the terminal, just type "python manage.py", we will see this output::
+"
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3> python .\manage.py
+
+Type 'manage.py help <subcommand>' for help on a specific subcommand.
+
+Available subcommands:
+
+[auth]
+    changepassword
+    createsuperuser
+
+[contenttypes]
+    remove_stale_contenttypes
+
+[debug_toolbar]
+    debugsqlshell
+
+[django]
+    check
+    compilemessages
+    createcachetable
+    dbshell
+    diffsettings
+    flush
+    inspectdb
+    loaddata
+    makemessages
+    makemigrations
+    migrate
+    optimizemigration
+    sendtestemail
+    shell
+    showmigrations
+    sqlflush
+    sqlmigrate
+    sqlsequencereset
+    squashmigrations
+    startapp
+    startproject
+    test
+    testserver
+
+[rest_framework]
+    generateschema
+
+[sessions]
+    clearsessions
+
+[staticfiles]
+    collectstatic
+    findstatic
+    runserver
+
+[store]
+    seed_db
+"
+7. Now run the "python manage.py seed_db" command to populate the database.
