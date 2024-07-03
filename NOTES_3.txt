@@ -215,3 +215,56 @@ Now the urlpatterns looks like this:
  <URLPattern '' [name='api-root']>,
  <URLPattern '<drf_format_suffix:format>' [name='api-root']>]
 "
+
+#! Returning Images from the Product API
+1. We need images to be returned in the Product API
+2. Add images to the ProductSerializer
+** serializer.py
+"
+class ProductImageSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        product_id = self.context['product_id']
+        return ProductImage.objects.create(product_id=product_id, **validated_data)
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
+
+class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True, read_only=True)
+    class Meta:
+        model = Product
+        fields = ['id', 'title', 'description', 'slug', 'inventory',
+                  'unit_price', 'price_with_tax', 'collection', 'images']
+
+    price_with_tax = serializers.SerializerMethodField(
+        method_name='calculate_tax')
+
+    def calculate_tax(self, product: Product):
+        return product.unit_price * Decimal(1.1)
+" 
+3. Now we can get these images but there are lots of duplicate sql queries, so we need to get the related fields beforehand.
+** select_related is best used for "one-to-one" or "many-to-one" relationships.
+** prefetch_related, on the other hand, is designed for "one-to-many" and "many-to-many" relationships.
+
+Since we have one to many relationships, we will use prefetch_related.
+** views.py
+"
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.prefetch_related('images').all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    pagination_class = DefaultPagination
+    permission_classes = [IsAdminOrReadOnly]
+    search_fields = ['title', 'description']
+    ordering_fields = ['unit_price', 'last_update']
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        if OrderItem.objects.filter(product_id=kwargs['pk']).count() > 0:
+            return Response({'error': 'Product cannot be deleted because it is associated with an order item.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        return super().destroy(request, *args, **kwargs)
+"
