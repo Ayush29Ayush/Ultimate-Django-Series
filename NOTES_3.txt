@@ -93,6 +93,8 @@ Available subcommands:
 6. Caching, etc.
 
 #! Uploading Files
+
+#! Managing Media Files 
 1. Create a "media" folder in the root directory of the project.
 2. Imsert any image in the media folder.
 3. Add MEDIA_URL and MEDIA_ROOT to settings.py.
@@ -125,3 +127,91 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 "
 5. Now go to "127.0.0.1:8000/media/{image.png}" and you will see the image in the browser. 
+
+#! Adding Images to Products
+1. Create a fact table for Product table which will be a one to many relationship (Product)(1) -> (Image)(n)
+2. Add the following model in models.py
+"
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='store/images', blank=True, null=True)
+"
+#! Building an API to Upload Images 
+1. Now we will create a API with url like "/products/1/images/1"
+Step-1: Create a serializer
+Step-2: Create a viewset
+Step-3: Create a router
+
+** serializers.py
+"
+class ProductImageSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        product_id = self.context['product_id']
+        return ProductImage.objects.create(product_id=product_id, **validated_data)
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
+"
+** views.py
+"
+class ProductImageViewSet(ModelViewSet):
+    serializer_class = ProductImageSerializer
+    # queryset = ProductImage.objects.all()
+    
+    def get_serializer_context(self):
+        return {'product_id': self.kwargs['product_pk']}
+    
+    #! URL like "/products/1(product_pk)/images/1(pk)"
+    def get_queryset(self):
+        return ProductImage.objects.filter(product_id=self.kwargs['product_pk'])
+"
+** urls.py
+"
+products_router.register('images', views.ProductImageViewSet, basename='product-images')
+"
+
+Now the urlpatterns looks like this:
+"
+[<URLPattern '^products/$' [name='products-list']>,
+ <URLPattern '^products\.(?P<format>[a-z0-9]+)/?$' [name='products-list']>,
+ <URLPattern '^products/(?P<pk>[^/.]+)/$' [name='products-detail']>,
+ <URLPattern '^products/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='products-detail']>,
+ <URLPattern '^collections/$' [name='collection-list']>,
+ <URLPattern '^collections\.(?P<format>[a-z0-9]+)/?$' [name='collection-list']>,
+ <URLPattern '^collections/(?P<pk>[^/.]+)/$' [name='collection-detail']>,
+ <URLPattern '^collections/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='collection-detail']>,
+ <URLPattern '^carts/$' [name='cart-list']>,
+ <URLPattern '^carts\.(?P<format>[a-z0-9]+)/?$' [name='cart-list']>,
+ <URLPattern '^carts/(?P<pk>[^/.]+)/$' [name='cart-detail']>,
+ <URLPattern '^carts/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='cart-detail']>,
+ <URLPattern '^customers/$' [name='customer-list']>,
+ <URLPattern '^customers\.(?P<format>[a-z0-9]+)/?$' [name='customer-list']>,
+ <URLPattern '^customers/me/$' [name='customer-me']>,
+ <URLPattern '^customers/me\.(?P<format>[a-z0-9]+)/?$' [name='customer-me']>,
+ <URLPattern '^customers/(?P<pk>[^/.]+)/$' [name='customer-detail']>,
+ <URLPattern '^customers/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='customer-detail']>,
+ <URLPattern '^customers/(?P<pk>[^/.]+)/history/$' [name='customer-history']>,
+ <URLPattern '^customers/(?P<pk>[^/.]+)/history\.(?P<format>[a-z0-9]+)/?$' [name='customer-history']>,
+ <URLPattern '^orders/$' [name='orders-list']>,
+ <URLPattern '^orders\.(?P<format>[a-z0-9]+)/?$' [name='orders-list']>,
+ <URLPattern '^orders/(?P<pk>[^/.]+)/$' [name='orders-detail']>,
+ <URLPattern '^orders/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='orders-detail']>,
+ <URLPattern '' [name='api-root']>,
+ <URLPattern '<drf_format_suffix:format>' [name='api-root']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/reviews/$' [name='product-reviews-list']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/reviews\.(?P<format>[a-z0-9]+)/?$' [name='product-reviews-list']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/reviews/(?P<pk>[^/.]+)/$' [name='product-reviews-detail']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/reviews/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='product-reviews-detail']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/images/$' [name='product-images-list']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/images\.(?P<format>[a-z0-9]+)/?$' [name='product-images-list']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/images/(?P<pk>[^/.]+)/$' [name='product-images-detail']>,
+ <URLPattern '^products/(?P<product_pk>[^/.]+)/images/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='product-images-detail']>,
+ <URLPattern '' [name='api-root']>,
+ <URLPattern '<drf_format_suffix:format>' [name='api-root']>,
+ <URLPattern '^carts/(?P<cart_pk>[^/.]+)/items/$' [name='cart-items-list']>,
+ <URLPattern '^carts/(?P<cart_pk>[^/.]+)/items\.(?P<format>[a-z0-9]+)/?$' [name='cart-items-list']>,
+ <URLPattern '^carts/(?P<cart_pk>[^/.]+)/items/(?P<pk>[^/.]+)/$' [name='cart-items-detail']>,
+ <URLPattern '^carts/(?P<cart_pk>[^/.]+)/items/(?P<pk>[^/.]+)\.(?P<format>[a-z0-9]+)/?$' [name='cart-items-detail']>,
+ <URLPattern '' [name='api-root']>,
+ <URLPattern '<drf_format_suffix:format>' [name='api-root']>]
+"
