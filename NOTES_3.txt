@@ -297,3 +297,9 @@ class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='store/images', blank=True, null=True, validators=[validate_file_size])
 "
+
+#! Setting Up the Client App
+I have uploaded the storefront3_client folder in the root directory of the project.
+* Check your node version with "node -v"
+* Install the dependencies with "npm install"
+* Start the development server with "npm start"
