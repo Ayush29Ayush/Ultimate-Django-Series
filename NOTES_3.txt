@@ -268,3 +268,32 @@ class ProductViewSet(ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
 "
+
+#! JWT Tokens for Authentication
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcyMDA4NjgxNCwiaWF0IjoxNzIwMDAwNDE0LCJqdGkiOiI2MjFlYmJjMDJiMTU0NDc2YjMyZDlmYTNmZDQ2ODllOCIsInVzZXJfaWQiOjF9.X7QcxJcHdE_ZGW_AtES_YTAjEHK9otUfEnrmR9tuCMI",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIwMDg2ODE0LCJpYXQiOjE3MjAwMDA0MTQsImp0aSI6IjI5ZDIyMDk5MDg3NjRhNmY5NGVlZjZiYTBmOWYyYWMzIiwidXNlcl9pZCI6MX0.dppHRTj3zuhgW0HoETEkiCBKY1ojq-hSA8RBn1TiHLw"
+}
+
+Then add "JWT <access_token>" in your ModHeader Chrome extension. Now you can access all the protected routes.
+
+#! Validating uploaded files
+1. Create a file called "validators.py" in the "store" app
+** validators.py
+"
+from django.core.exceptions import ValidationError
+
+def validate_file_size(file):
+    max_size_kb = 50
+    
+    if file.size > max_size_kb * 1024:
+        raise ValidationError(f'File size should not exceed {max_size_kb} KB')
+"
+
+Now add this validator in the ProductImage model
+** models.py
+"
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='store/images', blank=True, null=True, validators=[validate_file_size])
+"
