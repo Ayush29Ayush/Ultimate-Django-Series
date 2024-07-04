@@ -303,3 +303,22 @@ I have uploaded the storefront3_client folder in the root directory of the proje
 * Check your node version with "node -v"
 * Install the dependencies with "npm install"
 * Start the development server with "npm start"
+
+#! Enabling CORS 
+1. When we try to upload image from the frontend, we get error: "Could not reach the server!"
+2. This is a classic CORS (Cross-Origin Resource Sharing) error.
+3. This policy prevents any app hosted in domain1 to send request to apps hosted in domain2.
+4. Here we are facing this issue because the client app is hosted in domain1 (8001) and the server is hosted in domain2 (8000).
+
+5. To solve this CORS problem, we need to change some settings from the server side to allow requests from domain1 (8001).
+6. We will use django python package "django-cors-headers"
+Step-1: "pip install django-cors-headers"
+Step-2: Add it to INSTALLED_APPS in settings.py "corsheaders"
+Step-3: Add it to MIDDLEWARE in settings.py "corsheaders.middleware.CorsMiddleware"
+Step-4: Add it to settings.py "CORS_ALLOWED_ORIGINS"
+"
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8001',
+    'http://127.0.0.1:8001',
+]
+"
