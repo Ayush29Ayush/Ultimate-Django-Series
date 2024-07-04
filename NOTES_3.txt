@@ -324,3 +324,29 @@ CORS_ALLOWED_ORIGINS = [
 "
 
 #! Managing Images in the Admin 
+** media/store/styles.css 
+"
+.thumbnail {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+"
+
+** store/admin.py
+"
+class ProductImageInline(admin.TabularInline):
+    model = models.ProductImage
+    readonly_fields = ['thumbnail']
+
+    def thumbnail(self, instance):
+        if instance.image.name != '':
+            return format_html(f'<img src="{instance.image.url}" class="thumbnail" />')
+        return ''
+"
+
+** core/admin.py
+"
+class CustomProductAdmin(ProductAdmin):
+    inlines = [TagInline, ProductImageInline]
+"
