@@ -350,3 +350,72 @@ class ProductImageInline(admin.TabularInline):
 class CustomProductAdmin(ProductAdmin):
     inlines = [TagInline, ProductImageInline]
 "
+
+#* Section - 2 (Sending Email)
+
+#! Setting Up a fake SMTP server
+1. SMTP -> Simple Mail Transfer Protocol
+2. For setting up a fake SMTP server, we will use "https://github.com/rnwood/smtp4dev"
+3. Check its installation page, and then we will clone the fake server using docker image 
+4. run "docker run --rm -it -p 5000:80 -p 2525:25 rnwood/smtp4dev"
+We will get this output:
+"
+PS C:\Users\CZ0258> docker run --rm -it -p 5000:80 -p 2525:25 rnwood/smtp4dev
+Unable to find image 'rnwood/smtp4dev:latest' locally
+latest: Pulling from rnwood/smtp4dev
+09f376ebb190: Pull complete
+7248743022af: Pull complete
+95fcf2c5436c: Pull complete
+0fbaf16568f1: Pull complete
+e9e190cbc518: Pull complete
+a893f927642d: Pull complete
+25f219cce78d: Pull complete
+Digest: sha256:912304153668068188d83b612fe0b7c4ec852dddb45fb2946895c7a72e89c6f2
+Status: Downloaded newer image for rnwood/smtp4dev:latest
+smtp4dev version 3.6.1+5e577a8b4152ceb7276a5b8d4432430c9ff9055d
+https://github.com/rnwood/smtp4dev
+.NET Core runtime version: .NET 8.0.4
+
+ > For help use argument --help
+
+Install location: /
+DataDir: /smtp4dev
+Default settings file: /app/appsettings.json
+User settings file: /smtp4dev/appsettings.json
+Storing keys in a directory '/root/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+Parsing AutomaticRelayExpression
+Parsing CredentialsValidationExpression
+Parsing RecipientValidationExpression
+Parsing MessageValidationExpression
+No XML encryptor configured. Key {2276da35-cd42-4491-96d2-c05821926287} may be persisted to storage in unencrypted form.
+Using Sqlite database at /smtp4dev/database.db
+Updating DB schema with migrations: 20181020095712_InitialCreate, 20181021072518_AddSessionToMessageReln, 20181021105259_AddSessionStartData, 20181022132948_AddSessionErrorInfo, 20181022163054_AddAttachmentCount, 20190310130227_AddMessageUnreadFlag, 20200904135503_AddRelayError, 20200924120747_AddImapState, 20210211134331_AddMessageSecurity, 20210731045851_UTCTimeMigration, 20210807032903_MessageRelay, 20210901140449_Fix_Messages_PK, 20240308081358_AddSessionEncoding, 20240309084542_AddMessageEightBitTransport, 20240425190525_AddMailboxes, 20240511110456_AddDeliveredTo, 20240515191815_FixSessionMessageCascasing
+Creating mailbox Default
+TLS mode: None
+SMTP Server is listening on port 25 (::).
+Keeping last 100 messages per mailbox and 100 sessions.
+IMAP Server is listening on port 143 (::)
+Overriding HTTP_PORTS '80' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://*:80'.
+Now listening on: http://[::]:80
+"
+5. Now since the server is running on port 5000, we will use "http://localhost:5000" to send an email.
+
+#! Configuring the email backend
+There are various types of backends:
+* SMTP (default)
+* Console
+* File
+* Locmmem
+* Dummy
+
+1. Add the following code in settings.py
+"
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.filebased.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 2525 # Check your email server terminal input command and output from NOTES_3.txt
+DEFAULT_FROM_EMAIL = 'from@example.com'
+"
