@@ -419,3 +419,80 @@ EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 2525 # Check your email server terminal input command and output from NOTES_3.txt
 DEFAULT_FROM_EMAIL = 'from@example.com'
 "
+
+#! Sending Emails
+1. We can send mail using send_mail and mail_admins
+2. We do not need to add any configuration for send_mail but for mail_admins we need to add the following code:
+"
+ADMINS = [
+    ('admin', 'admin@gmail.com'),
+]
+"
+3. Go to playground/views.py
+"
+from django.core.mail import send_mail, mail_admins, BadHeaderError
+from django.shortcuts import render
+
+def say_hello(request):
+    try:
+        # send_mail(subject="Django Test Email", message="Hello, this is a test email from django smtp server...", from_email="ayushdjango@gmail.com", recipient_list=["ayushsenapati123@gmail.com"])
+        mail_admins(subject="Django Test Email", message="Hello, this is a test email from django smtp server...", fail_silently=False, html_message="Hello, this is a test email from django smtp server...")
+    except BadHeaderError:
+        pass
+    return render(request, 'hello.html', {'name': 'Ayush Senapati'})
+"
+
+#! Attaching files
+1. We will use EmailMessage for attaching files
+** playground/views.py
+"
+from django.core.mail import send_mail, mail_admins, BadHeaderError, EmailMessage
+from django.shortcuts import render
+
+
+def say_hello(request):
+    try:
+        message = EmailMessage(
+            subject="Django Test Email",
+            body="Hello, this is a test email from django smtp server...",
+            from_email="ayushdjango@gmail.com",
+            to=["ayushsenapati123@gmail.com"],
+        )
+        message.attach_file("playground/static/images/amazon.png")
+        message.send()
+    except BadHeaderError:
+        pass
+
+    return render(request, "hello.html", {"name": "Ayush Senapati"})
+
+"
+
+#! Sending Templated Emails
+1. "pip install django-templated-mail"
+2. Create a new template in playground/templates/email/hello.html
+"
+{% block subject %}This is a long subject{% endblock %}
+
+{% block html_body %}
+<h1>Hello</h1>
+My name is {{ name }}
+{% endblock %}
+"
+3. In playground/views.py
+"
+from django.core.mail import EmailMessage, BadHeaderError
+from django.shortcuts import render
+from templated_mail.mail import BaseEmailMessage
+
+
+def say_hello(request):
+    try:
+       message = BaseEmailMessage(
+           template_name='emails/hello.html',
+           context={'name': 'Ayush'}
+       )
+       message.send(['ayushsenapati123@gmail.com'])
+    except BadHeaderError:
+        pass
+    return render(request, 'hello.html', {'name': 'Ayush Senapati'})
+"
