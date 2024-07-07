@@ -496,3 +496,50 @@ def say_hello(request):
         pass
     return render(request, 'hello.html', {'name': 'Ayush Senapati'})
 "
+
+#* Section - 3 (Running Background Tasks)
+
+#! Introduction to Celery
+
+1. There are lots of long-running tasks like:
+* Sending Emails
+* Processing images and videos
+* Generating reports
+* Running machine learning models, etc.
+
+2. With celery, we can have multiple workers working in parallel for our application.
+3. Flow:
+Application -> Queue -> Worker_1, Worker_2, Worker_3, etc
+4. The main advantage of using Celery is that:
+* we can schedule tasks to be run in the future i.e periodic tasks.
+* time taking tasks can be run in the background.
+* even if any worker goes down, tasks can still be run and the main application will not be blocked.
+
+#! Message Broker
+1. Flow:
+Application -> Queue -> Worker_1, Worker_2, Worker_3, etc
+2. Here the queue is the message broker responsible for assigning tasks along with sending and receiving messages from the workers.
+3. Broker is just the middleman between the application and the workers.
+4. Celery provides message broker like:
+* Redis (in-memory data store)
+* RabbitMQ (real, enterprise-grade broker)
+5. We will use redis as our cache + message broker
+
+#! Installing Redis
+1. Here, we will use docker to install and use redis.
+2. Redis will be inside a docker container which you can think of as a isolated light weight virtual machine.
+3. Our application and the redis in the container will communicate using a port.
+4. Use "docker run -d -p 6379:6379 redis" to run the container.
+The command "docker run -d -p 6379:6379 redis" is used to start a new Docker container based on the redis image. Let's break down each part of the command to understand what it does:
+
+** docker run: This is the basic command used to create and start a new container from an image.
+** -d: The -d flag stands for "detached mode." When you run a container in detached mode, it starts in the background and doesn't receive input or display output in your terminal. This allows you to continue using the terminal while the container runs.
+** -p 6379:6379: The -p flag is used to publish a container's port(s) to the host (your computer). The syntax is -p <host_port>:<container_port>. In this case, 6379:6379 means that port 6379 inside the container (the standard port for Redis) is mapped to port 6379 on your host machine. This allows you to connect to the Redis instance running inside the Docker container from any application running on your host machine that needs to communicate with Redis.
+** redis: Finally, redis specifies the name of the Docker image to use when creating the container. Docker images contain the software needed to run applications. In this case, redis refers to the official Redis image available on Docker Hub, which includes the Redis server.
+5. Use "docker ps" to check all the containers which are running.
+"
+PS D:\Ultimate-Django-Series> docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED              STATUS              PORTS                    NAMES
+d4f0c5014983   redis     "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:6379->6379/tcp   laughing_mirzakhani
+"
+6. Also install redis as your django dependency by running: "pip install redis"
