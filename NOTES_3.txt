@@ -543,3 +543,38 @@ CONTAINER ID   IMAGE     COMMAND                  CREATED              STATUS   
 d4f0c5014983   redis     "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:6379->6379/tcp   laughing_mirzakhani
 "
 6. Also install redis as your django dependency by running: "pip install redis"
+
+#! Celery and Windows
+1. Celery 4+ and above are not supported on Windows.
+2. To solve this, we will use WSL i.e Windows Subsystem for Linux.
+
+#! Setting up Celery
+1. Run "pip install celery"
+2. Inside the project directory, create a new file named celery.py
+** storefront/celery.py
+"
+import os
+from celery import Celery
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'storefront.settings')
+
+celery = Celery('storefront')
+celery.config_from_object('django.conf:settings', namespace='CELERY')
+celery.autodiscover_tasks()   
+"
+3. But for django to recognize this celery.py code, add it to __init__.py
+"
+from storefront.celery import celery
+"
+4. Add this to settings.py
+** storefront/settings.py
+"
+# CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+CELERY_BROKER_URL = 'redis://localhost:6379/1'
+"
+
+5. So, currently we need 3 commands for our application to run:
+-> python manage.py runserver
+-> docker run -p 6379:6379 redis
+-> celery -A storefront worker --loglevel=info
+6. This is where docker can be very helpful. We will use "docker-compose up" to do this. This will be implemented at the end of this project development.
