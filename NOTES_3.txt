@@ -631,3 +631,89 @@ CELERY_BEAT_SCHEDULE = {
 1. For monitoring, we will use flower => pip install flower
 2. Use "celery -A storefront flower"
 3. Open http://localhost:5555 in your browser
+
+4. We can also use django-celery-result => pip install django-celery-results
+5. Add it to INSTALLED_APPS in settings.py => "django_celery_results"
+6. Add the following code to settings.py
+"
+CELERY_RESULT_BACKEND = 'django-db'
+"
+
+#TODO => Major Changes
+# ! Updated Celery Configuration 
+** storefront/settings.py
+"
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379' #! 6379 is the default port.
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_RESULT_BACKEND = 'django-db'
+
+CELERY_BEAT_SCHEDULE = {
+    #! For better consistency, it is better to use same name as in tasks.py
+    'notify_customers': {
+        'task': 'playground.tasks.notify_customers',
+        'schedule': 5, #! Schedule interval in seconds
+        'args': ['Hello World']
+    }
+}
+"
+
+** storefront/celery.py
+"
+import os
+from celery import Celery
+from django.conf import settings
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'storefront.settings')
+
+celery = Celery('storefront')
+celery.config_from_object(settings, namespace='CELERY')
+celery.autodiscover_tasks()
+"
+
+** storefront/__init__.py
+"
+from storefront.celery import celery as celery_app
+
+__all__ = ('celery_app',)
+"
+
+** playground/tasks.py
+"
+from time import sleep
+from celery import shared_task
+
+
+@shared_task(bind=True)
+def test_func(self):
+    # operations
+    for i in range(10):
+        print(i)
+    return "Done"
+
+
+@shared_task
+def notify_customers(message):
+    print("Sending 10k emails to customers...")
+    print(message)
+    sleep(10)
+    print("Emails were successfully sent!!!")
+
+"
+
+** playground/views.py
+"
+from django.shortcuts import render
+from playground.tasks import notify_customers
+
+
+def say_hello(request):
+    notify_customers.delay(message="Hello World")
+    return render(request, 'hello.html', {'name': 'Ayush Senapati'})
+"
+
+1. Run command for worker => "celery -A storefront.celery worker --pool=solo --loglevel=info"
+2. Run command for beat => "celery -A storefront.celery beat --loglevel=info"
+3. Run command for flower => "celery -A storefront.celery flower"
