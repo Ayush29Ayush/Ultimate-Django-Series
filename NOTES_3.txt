@@ -717,3 +717,42 @@ def say_hello(request):
 1. Run command for worker => "celery -A storefront.celery worker --pool=solo --loglevel=info"
 2. Run command for beat => "celery -A storefront.celery beat --loglevel=info"
 3. Run command for flower => "celery -A storefront.celery flower"
+
+#* Section - 4 (Automated Testing)
+
+#! What is Automated Testing?
+Automated Testing is a process of writing automated tests for your software. Manual testing is possible but as our application grows with time, manual testing will not be feasible anymore so we use automated testing.
+
+#! Test Behaviours, Not Implementations 
+1. While testing, just test the behaviour, not the implementation.
+2. We check whether the fan is on or off by checking the rotation speed of the fan rather than opening the fan and checking the input and output current from the capacitors and rotors.
+3. Watch the video once for some more details.
+
+#! Tooling ( Test Frameworks )
+1. Pytest (we will use this)
+2. unittest
+
+* pip install pytest
+* pip install pytest-django (This is a django dependency for pytest)
+
+#! First Test
+1. Create a new folder called "tests" inside "store" directory. This folder convention is a must.
+2. Inside the tests folder, create a new file named "test_collections.py". This "test_" convention is a must.
+3. Create a new function inside the file named "test_collections.py". This "test_" function convention is a must.
+"
+from rest_framework import status
+from rest_framework.test import APIClient
+
+class TestCreateCollection():
+    def test_if_user_is_anonymous_return_401(self):
+        #TODO => Format for any test => AAA (Arrange, Act, Assert)
+        # Arrange
+        
+        # Act
+        client = APIClient()
+        response = client.post('/store/collections/', {'title': 'some title'})
+        
+        # Assert
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED       
+"
+
