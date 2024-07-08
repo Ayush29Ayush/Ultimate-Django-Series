@@ -578,3 +578,56 @@ CELERY_BROKER_URL = 'redis://localhost:6379/1'
 -> docker run -p 6379:6379 redis
 -> celery -A storefront worker --loglevel=info
 6. This is where docker can be very helpful. We will use "docker-compose up" to do this. This will be implemented at the end of this project development.
+
+#! Creating and Executing Tasks
+1. Create a new file named tasks.py
+** storefront/tasks.py
+"
+from time import sleep
+from celery import shared_task
+
+@shared_task
+def notify_customers(message):
+    print("Sending 10k emails to customers...")
+    print(message)
+    sleep(10)
+    print("Emails were successfully sent!!!")
+"
+
+** storefront/views.py
+"
+from django.shortcuts import render
+from playground.tasks import notify_customers
+
+def say_hello(request):
+    notify_customers.delay(message="Hello World")
+    return render(request, 'hello.html', {'name': 'Ayush Senapati'})
+"
+
+#! Scheduling Periodic Tasks
+1. Used for:
+* Generating periodic tasks
+* Sending emails
+* Running maintenance tasks
+2. We will use "celery beat" to schedule periodic tasks
+3. pip install django-celery-beat
+4. Add it to INSTALLED_APPS in settings.py => "django_celery_beat"
+5. Add the following code to settings.py
+"
+CELERY_BEAT_SCHEDULE = {
+    #! For better consistency, it is better to use same name as in tasks.py
+    'notify_customers': {
+        'task': 'playground.tasks.notify_customers',
+        'schedule': 5, #! Schedule interval in seconds
+        'args': ['Hello World']
+    }
+}
+"
+6. Use "celery -A storefront beat --loglevel=info" to start the celery beat
+7. Use "celery -A storefront worker --loglevel=info" to start the celery worker
+8. Now beat will send the periodic tasks to the worker every 5 seconds.
+
+#! Monitoring Celery Tasks
+1. For monitoring, we will use flower => pip install flower
+2. Use "celery -A storefront flower"
+3. Open http://localhost:5555 in your browser
