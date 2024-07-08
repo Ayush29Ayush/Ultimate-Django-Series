@@ -162,3 +162,6 @@ cython_debug/
 #.idea/
 
 storefront3_client/node_modules
+*.bak
+*.dat
+*.dir

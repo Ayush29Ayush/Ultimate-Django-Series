@@ -194,7 +194,8 @@ ADMINS = [
 ]
 
 # CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_BROKER_URL = 'redis://localhost:6379/1' #! 6379 is the default port.
+# CELERY_BROKER_URL = 'redis://localhost:6379/1' #! 6379 is the default port.
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379' #! 6379 is the default port.
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
