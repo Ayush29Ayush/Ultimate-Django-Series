@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     'djoser',
     'playground',
     'django_celery_results',
+    'django_celery_beat',
     'debug_toolbar',
     'store',
     'tags',
@@ -198,3 +200,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
 CELERY_RESULT_BACKEND = 'django-db'
+
+CELERY_BEAT_SCHEDULE = {
+    #! For better consistency, it is better to use same name as in tasks.py
+    'notify_customers': {
+        'task': 'playground.tasks.notify_customers',
+        'schedule': 5, #! Schedule interval in seconds
+        'args': ['Hello World']
+    }
+}
