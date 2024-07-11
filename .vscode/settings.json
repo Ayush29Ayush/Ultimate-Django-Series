@@ -13,5 +13,10 @@
             "database": "storefront",
             "username": "root"
         }
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "Ultimate Django Series 3"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
