@@ -756,3 +756,96 @@ class TestCreateCollection():
         assert response.status_code == status.HTTP_401_UNAUTHORIZED       
 "
 
+#! Running Tests
+1. Create a new file in the root directory named "pytest.ini"
+"
+[pytest]
+DJANGO_SETTINGS_MODULE = storefront.settings
+"
+
+** test_collections.py
+"
+from rest_framework import status
+from rest_framework.test import APIClient
+import pytest
+
+@pytest.mark.django_db
+class TestCreateCollection():
+    def test_if_user_is_anonymous_return_401(self):
+        #TODO => Format for any test => AAA (Arrange, Act, Assert)
+        # Arrange
+        
+        # Act
+        client = APIClient()
+        response = client.post('/store/collections/', {'title': 'some title'})
+        
+        # Assert
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+"
+2. Now in the terminal, run command => "pytest" to run all the tests from every app directory.
+3. To run test for any individual app, run command => "pytest store/tests"
+4. To run only a specific test, run command => "pytest store/tests/test_collections.py"
+5. To use a particular class for testing run command => "pytest store/tests/test_collections.py::TestCreateCollection"
+6. Use command "pytest -k anonymous" to run only tests that have "anonymous" in their name.
+
+#! Skipping Test
+1. To skip any test, add pytest.mark.skip
+** test_collections.py
+"
+from rest_framework import status
+from rest_framework.test import APIClient
+import pytest
+
+@pytest.mark.django_db
+class TestCreateCollection():
+    @pytest.mark.skip
+    def test_if_user_is_anonymous_return_401(self):
+        #TODO => Format for any test => AAA (Arrange, Act, Assert)
+        # Arrange
+        
+        # Act
+        client = APIClient()
+        response = client.post('/store/collections/', {'title': 'some title'})
+        
+        # Assert
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+"
+
+#! Continuous Testing
+1. pip install pytest-watch (We will use this)
+2. Now in terminal run command => "ptw", it will keep watching and run tests continuously whenever the code is changed.
+
+#! Running and Debugging Tests in VS Code
+1. Go to "Testing" tab in VS code left panel
+2. Select the type of test i.e unittest or pytest
+3. Select the location for the test
+4. Now run the available test in VS code.
+
+#! Authenticating the user
+1. use "client.force_authenticate(user=user)" in the test function to authenticate the user.
+
+** test_collections.py
+"
+from rest_framework import status
+from rest_framework.test import APIClient
+import pytest
+
+@pytest.mark.django_db
+class TestCreateCollection():
+    def test_if_user_is_anonymous_return_401(self):
+        #TODO => Format for any test => AAA (Arrange, Act, Assert)
+        # Arrange
+        
+        # Act
+        client = APIClient()
+        response = client.post('/store/collections/', {'title': 'some title'})
+        
+        # Assert
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        
+    def test_if_user_is_not_admin_return_403(self):
+        client = APIClient()
+        client.force_authenticate(user = {})
+        response = client.post('/store/collections/', {'title': 'some title'})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+"
