@@ -271,8 +271,8 @@ class ProductViewSet(ModelViewSet):
 
 #! JWT Tokens for Authentication
 {
-    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcyMDA4NjgxNCwiaWF0IjoxNzIwMDAwNDE0LCJqdGkiOiI2MjFlYmJjMDJiMTU0NDc2YjMyZDlmYTNmZDQ2ODllOCIsInVzZXJfaWQiOjF9.X7QcxJcHdE_ZGW_AtES_YTAjEHK9otUfEnrmR9tuCMI",
-    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIwMDg2ODE0LCJpYXQiOjE3MjAwMDA0MTQsImp0aSI6IjI5ZDIyMDk5MDg3NjRhNmY5NGVlZjZiYTBmOWYyYWMzIiwidXNlcl9pZCI6MX0.dppHRTj3zuhgW0HoETEkiCBKY1ojq-hSA8RBn1TiHLw"
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcyMDg4NTU0MiwiaWF0IjoxNzIwNzk5MTQyLCJqdGkiOiJlNWIwNmIzOTE0Yzc0YzE4OGM2ZDUzMzJlYjhjNzUyMyIsInVzZXJfaWQiOjF9.dsdTcrHVk6mUUycWxDgq_Vkxd4jc5zi4n9sw5vUITLM",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzI5NDM5MTQyLCJpYXQiOjE3MjA3OTkxNDIsImp0aSI6ImNhNjU3ZTNhNmY5NjQyY2Y4YzFhZjJjZTIzMmM5ZTZlIiwidXNlcl9pZCI6MX0.KzA1Cs99loTmmm1xNx8mReiPhj5-NSfhN7a1Y9TdKzc"
 }
 
 Then add "JWT <access_token>" in your ModHeader Chrome extension. Now you can access all the protected routes.
@@ -848,4 +848,117 @@ class TestCreateCollection():
         client.force_authenticate(user = {})
         response = client.post('/store/collections/', {'title': 'some title'})
         assert response.status_code == status.HTTP_403_FORBIDDEN
+"
+
+#! Single or Multiple Assertions
+1. Tests should have a single responsibility.
+
+** test_collections.py
+"
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.test import APIClient
+import pytest
+
+@pytest.mark.django_db
+class TestCreateCollection():
+    def test_if_user_is_anonymous_return_401(self):
+        #TODO => Format for any test => AAA (Arrange, Act, Assert)
+        # Arrange
+        
+        # Act
+        client = APIClient()
+        response = client.post('/store/collections/', {'title': 'some title'})
+        
+        # Assert
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        
+    def test_if_user_is_not_admin_return_403(self):
+        client = APIClient()
+        client.force_authenticate(user = {})
+        response = client.post('/store/collections/', {'title': 'some title'})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        
+    def test_if_data_is_invalid_returns_400(self):
+        client = APIClient()
+        client.force_authenticate(user=User(is_staff=True))
+        response = client.post('/store/collections/', {'title': ''})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data['title'] is not None
+        
+    def test_if_data_is_valid_returns_201(self):
+        client = APIClient()
+        client.force_authenticate(user=User(is_staff=True))
+        response = client.post('/store/collections/', {'title': 'some title'})
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data['id'] > 0
+"
+
+#! Fixtures
+1. Feature of pytest which can be used to remove the repetition of code.
+2. Create a fixture in conftest.py under tests folder
+3. These fixtures will be available in all the tests even without importing explicitly.
+** conftest.py
+"
+import pytest
+from rest_framework.test import APIClient
+from django.contrib.auth.models import User
+
+@pytest.fixture
+def api_client():
+    return APIClient()
+
+@pytest.fixture
+def authenticate(api_client):
+    def do_authenticate(is_staff=False):
+        return api_client.force_authenticate(user=User(is_staff=is_staff))
+    return do_authenticate
+"
+** test_collections.py
+"
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.test import APIClient
+import pytest
+
+
+@pytest.fixture
+def create_collection(api_client):
+    def do_create_collection(collection):
+        return api_client.post("/store/collections/", collection)
+
+    return do_create_collection
+
+
+@pytest.mark.django_db
+class TestCreateCollection:
+    def test_if_user_is_anonymous_returns_401(self, create_collection):
+        response = create_collection({"title": "a"})
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_if_user_is_not_admin_returns_403(self, authenticate, create_collection):
+        #! Arrange
+        authenticate()
+        #! Act
+        response = create_collection({"title": "a"})
+        #! Assert
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_if_data_is_invalid_returns_400(self, authenticate, create_collection):
+        authenticate(is_staff=True)
+
+        response = create_collection({"title": ""})
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data["title"] is not None
+
+    def test_if_data_is_valid_returns_201(self, authenticate, create_collection):
+        authenticate(is_staff=True)
+
+        response = create_collection({"title": "a"})
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["id"] > 0
+
 "
