@@ -1030,5 +1030,16 @@ class TestRetrieveCollection:
             'title': collection.title,
             'products_count': 0
         }
-
 "
+
+#* Section - 5 ( Performance Testing )
+
+#! Why Performance Testing?
+1. To test and measure the performance of the application.
+2. Most companies neglect performance testing but later on face huge issues like application crash etc.
+3. Always run performance tests while building an application.
+4. Helps us identify and fix performance issues.
+
+#! Installing Locust
+There are various performance testing tools but we will use Locust.
+1. pip install locust
