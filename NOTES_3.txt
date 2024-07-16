@@ -1102,3 +1102,29 @@ Ultimate Django Series 3> locust -f .\locustfiles\browse_products.py
 * Ramp up = 1
 * Host = http://localhost:8000
 and click on "Start" button.
+
+#! Performance Testing Optimization
+1. Optimize the code, remove unnecessary code, etc. Refer "tips.txt"
+2. Re-write the query
+3. Tune the database
+4. Cache the results
+
+#! Profiling with Silk
+Now that we have identified the slow endpoints, we will now have to identify the source of the issue. For this, we will use "Silk".
+1. pip install django-silk
+2. Add it to INSTALLED_APPS in settings.py => "silk"
+3. Add it to MIDDLEWARE in settings.py => "silk.middleware.SilkyMiddleware"
+"
+if DEBUG:
+    MIDDLEWARE += [
+        'silk.middleware.SilkyMiddleware',
+    ]
+"
+4. Add it to urls.py => urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))] inside the settings.DEBUG
+"
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+"
+5. Now run migration command => "python manage.py migrate"
+6. Now go to "127.0.0.1:8000/silk/", you will see the dashboard. You can access every detail of the endpoints along with the sql queries running in the background with its execution time.
