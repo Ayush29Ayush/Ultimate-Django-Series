@@ -1128,3 +1128,9 @@ if settings.DEBUG:
 "
 5. Now run migration command => "python manage.py migrate"
 6. Now go to "127.0.0.1:8000/silk/", you will see the dashboard. You can access every detail of the endpoints along with the sql queries running in the background with its execution time.
+
+#! Verifying Optimizations
+1. Rerun the locust performance test after making Optimizations and also comment out the Silk middleware as it adds a lot of overhead.
+
+#! Stress Testing
+1. Load test your application with around 1000 users.
