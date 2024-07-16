@@ -1043,3 +1043,62 @@ class TestRetrieveCollection:
 #! Installing Locust
 There are various performance testing tools but we will use Locust.
 1. pip install locust
+
+#! Creating a Test Script
+Core Use Cases - 
+* Browse products
+* Register, sign in and sign out
+
+1. Create a new directory called "locustfiles"
+2. Inside that directory, create a new file called "browse_products.py"
+3. Write your load tests in that file.
+** browse_products.py
+"
+from locust import HttpUser, task, between
+from random import randint
+
+class WebsiteUser(HttpUser):
+    #TODO -> * Viewing products * Viewing product details * Add product to cart
+    
+    #! This will make the tasks wait between 1 and 5 seconds before executing the next task
+    wait_time = between(1, 5)
+    
+    #! This task numbers are weight of each task i.e their priority
+    #! Higher number means higher priority
+    @task(2)
+    def view_products(self):
+        print("View products")
+        collection_id = randint(2, 6)
+        self.client.get(f"/store/products/?collection_id={collection_id}", name="/store/products")
+
+    @task(4) 
+    def view_product_details(self):
+        print("View product details")
+        product_id = randint(1, 1000)
+        self.client.get(f"/store/products/{product_id}", name="/store/products/:id")
+
+    @task(1)
+    def add_to_cart(self):
+        print("Add to cart")
+        product_id = randint(1, 10)
+        self.client.post(f"/store/carts/{self.cart_id}/items/", name="/store/carts/items/", json={'product_id': product_id, 'quantity': 1})
+
+    #! This is not a task but will run on start of every load test
+    def on_start(self):
+        response = self.client.post("/store/carts/")
+        result = response.json()
+        self.cart_id = result["id"]
+"
+
+#! Running a load test script
+1. In terminal, run command => "locust -f locustfiles/browse_products.py", you will see terminal output like
+"
+Ultimate Django Series 3> locust -f .\locustfiles\browse_products.py
+[2024-07-16 13:00:34,893] INFO/locust.main: Starting web interface at http://localhost:8089 (accepting connections from all network interfaces)
+[2024-07-16 13:00:34,932] INFO/locust.main: Starting Locust 2.29.1
+"
+2. Now in the locust webpage, set 
+* Number of users = 1
+* Ramp up = 1
+* Host = http://localhost:8000
+and click on "Start" button.
