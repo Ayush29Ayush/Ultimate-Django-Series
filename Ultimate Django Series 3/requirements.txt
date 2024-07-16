@@ -1,5 +1,6 @@
 amqp==5.2.0
 asgiref==3.8.1
+autopep8==2.3.1
 billiard==4.2.0
 blinker==1.8.2
 Brotli==1.1.0
@@ -22,6 +23,7 @@ django-celery-results==2.5.1
 django-cors-headers==4.4.0
 django-debug-toolbar==4.4.2
 django-filter==24.2
+django-silk==5.1.0
 django-templated-mail==1.1.1
 django-timezone-field==7.0
 djangorestframework==3.15.1
@@ -35,6 +37,7 @@ Flask-Login==0.6.3
 flower==2.0.1
 gevent==24.2.1
 geventhttpclient==2.3.1
+gprof2dot==2024.6.6
 greenlet==3.0.3
 humanize==4.10.0
 idna==3.7
@@ -55,6 +58,7 @@ pluggy==1.5.0
 prometheus_client==0.20.0
 prompt_toolkit==3.0.47
 psutil==6.0.0
+pycodestyle==2.12.0
 pycparser==2.22
 PyJWT==2.8.0
 pytest==8.2.2
