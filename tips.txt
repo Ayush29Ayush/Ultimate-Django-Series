@@ -1,0 +1,18 @@
+# Preload related objects
+Product.objects.select_related("...")
+Product.objects.prefetch_related("...")
+
+# Load only what you need
+Product.onjects.only("...", "...")
+Product.objects.defer("...")
+
+# Use values
+Product.objects.values()
+Product.objects.values_list()
+
+# Count properly
+Product.objects.count() #! Good practice
+len(Product.objects.all()) #! Bad practice
+
+# Bulk create/update
+Product.objects.bulk_create([]) #! Good practice
