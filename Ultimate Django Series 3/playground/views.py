@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from playground.tasks import notify_customers
-
+import requests
 
 def say_hello(request):
-    notify_customers.delay(message="Hello World")
-    return render(request, 'hello.html', {'name': 'Ayush Senapati'})
+    #! This will get you the response after 2 seconds of request
+    requests.get("http://httpbin.org/delay/2")
+    return render(request, "hello.html", {"name": "Ayush Senapati"})
