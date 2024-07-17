@@ -1134,3 +1134,71 @@ if settings.DEBUG:
 
 #! Stress Testing
 1. Load test your application with around 1000 users.
+
+#* Section - 6 ( Caching )
+Caching is a technique that improves the performance of your application.
+
+#! What is Caching?
+When we send a request to server, it gets the data from the database and then sends it back to the user. If the data is not modified, it is cached (stored) in the server. If the data is modified, it is sent to the server again. This is called caching.
+
+* Highly benificial for performance
+* Caching is used to improve the performance of your application
+* Imagine if we use a 3rd party api and the api is slow or crashes, still we can get the data from the cache
+* Caching too much data can slow down your application
+
+#! Cache Backends
+Various types of cache backends are available:
+* Local memory (default)
+* Redis ( We will use this )
+* Memcached
+* Database
+
+#! Simulate a slow api
+** playground/views.py
+"
+from django.shortcuts import render
+import requests
+
+def say_hello(request):
+    #! This will get you the response after 10 seconds of request
+    requests.get("http://httpbin.org/delay/10")
+    return render(request, "hello.html", {"name": "Ayush Senapati"})
+"
+
+#! Getting a baseline performance benchmark
+* Run the load test with 5 users sending 10 requests per second
+Benchmarks:
+"
+Response time percentiles (approximated)
+Type     Name                                                                                  50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+GET      /playground/hello/                                                                   3400   3400   3400   3400   3400   3400   3400   3400   3400   3400   3400      2
+POST     /store/carts/                                                                        2100   2100   2100   2100   2100   2100   2100   2100   2100   2100   2100      5
+POST     /store/carts/items/                                                                    25     27     27     30     30     30     30     30     30     30     30      5
+GET      /store/products                                                                        26     27     33     49     62     66     66     66     66     66     66     14
+GET      /store/products/:id                                                                  2100   2100   2100   2100   2100   2100   2100   2100   2100   2100   2100     35
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                           2100   2100   2100   2100   2100   2100   3000   3400   3400   3400   3400     61
+"
+
+#! Installing Redis
+1. Install Redis on your machine either through windows forked version or the docker image.
+2. Run the docker image => "docker run -d -p 6379:6379 redis" where -d is for detached mode so that it runs in the background and -p is for port mapping.
+
+#! Configuring Redis
+1. Install django-redis => "pip install django-redis"
+2. Go to its official documentation => "https://pypi.org/project/django-redis/" or its github page
+3. Add these to settings.py
+** settings.py
+"
+#! Django-redis cache configuration
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+"
