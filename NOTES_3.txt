@@ -1375,3 +1375,20 @@ OK
 
 * To debug any container or image
 'Try Docker Debug for seamless, persistent debugging tools in any container or image → docker debug <container_id>'
+
+#* Section - 7 ( Preparing for Production )
+
+#! Adding the Home Page
+1. Create a homepage for the application so that we get a page rather than error for url "localhost:8000".
+2. Create core/templates/core/index.html
+3. Create core/urls.py
+"
+from django.views.generic import TemplateView
+from django.urls import path
+
+urlpatterns = [
+    path("", TemplateView.as_view(template_name="core/index.html")),
+]
+"
+4. Add this core/urls.py to storefront/urls.py using "path("", include("core.urls")),"
+5. Now go to "127.0.0.1:8000" and you will see the homepage.
