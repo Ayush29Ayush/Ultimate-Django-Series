@@ -1392,3 +1392,26 @@ urlpatterns = [
 "
 4. Add this core/urls.py to storefront/urls.py using "path("", include("core.urls")),"
 5. Now go to "127.0.0.1:8000" and you will see the homepage.
+
+#! Managing Static Assets
+1. Create a static folder in the core directory.
+2. Create static/core/style.css and static/core/logo.png
+3. Update your index.html
+"
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}" />
+  </head>
+  <body>
+    <div class="home-page">
+      <img src="{% static 'core/logo.png' %}" alt="Logo" class="logo" />
+    </div>
+  </body>
+</html>
+"
