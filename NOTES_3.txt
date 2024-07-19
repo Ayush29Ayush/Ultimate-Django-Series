@@ -1415,3 +1415,38 @@ urlpatterns = [
   </body>
 </html>
 "
+
+#! Collecting Static Assets
+0. Add this to settings.py
+"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+"
+1. Type "python manage.py collectstatic" in the terminal.
+2. This command will create a static folder in the project which will be a summation of all the static files in the project app directories.
+"
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3> python manage.py collectstatic 
+
+262 static files copied to 'D:\Ultimate-Django-Series\Ultimate Django Series 3\static'.
+"
+
+#! Serving Static Assets
+1. Django has command to collect static assets but doesn't provide a way to serve them.
+2. So to serve these assets, we will use "whitenoise" package.
+3. pip install whitenoise
+4. Add Middleware in settings.py
+"
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', #! Add whitenoise middleware right after security
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'silk.middleware.SilkyMiddleware',
+]
+"
