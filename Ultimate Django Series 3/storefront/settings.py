@@ -252,7 +252,9 @@ LOGGING = {
     #! Define which apps will use logging
     'loggers': {
         #! For the entire project we use "django"
-        'django': {
+        # 'django': {
+        #! In Django logging configuration, specifying an empty string ('') as the logger name means it will be applied as the root logger configuration. The root logger is the base of the logging hierarchy. It catches all log messages emitted by your application unless they are caught by another logger with a higher priority (i.e., a logger that is closer to the source of the logging event).
+        '': {
             'handlers': ['console', 'file'], #! For the entire project we want the logs to be sent to "console" and "file"
             'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'), #! SEVERITY => DEBUG, INFO, WARNING, ERROR, CRITICAL. By default, it is "INFO" here
         },
