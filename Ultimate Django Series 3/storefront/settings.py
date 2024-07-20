@@ -232,3 +232,44 @@ CACHES = {
         "TIMEOUT": 10 * 60, #! 10 minutes
     }
 }
+
+#! Logging configuration
+LOGGING = {
+    #! Version of logging
+    'version': 1,
+    #! disable logging to previous handlers
+    'disable_existing_loggers': False,
+    #! Where to handle and send logging data
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+        }
+    },
+    #! Define which apps will use logging
+    'loggers': {
+        #! For the entire project we use "django"
+        'django': {
+            'handlers': ['console', 'file'], #! For the entire project we want the logs to be sent to "console" and "file"
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'), #! SEVERITY => DEBUG, INFO, WARNING, ERROR, CRITICAL. By default, it is "INFO" here
+        },
+    },
+    #! Formatters for logging
+    'formatters': {
+        #! For detailed structuring of logs
+        'verbose': {
+            # 'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{asctime} ({levelname}) - {name} - {message}',
+            'style': '{', #! '{' means str.format()
+            # 'style': '$', #! '$' means str.template()
+        },
+        #! For simple structuring of logs
+        # 'simple': {
+        #     'format': '{levelname} {message}',
+        #     'style': '{',
+        # },
+    }
+}
