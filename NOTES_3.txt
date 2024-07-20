@@ -1540,3 +1540,42 @@ class HelloView(APIView):
 2024-07-20 19:46:21,385 (INFO) - playground.views - Calling httpbin.org/delay/2
 2024-07-20 19:46:23,965 (INFO) - playground.views - Received response from httpbin.org/delay/2
 "
+
+#! Managing Development and Production Settings
+1. To differentiate between development and production settings, we will create settings directory inside project directory.
+2. Inside the settings directory, create cpmmmon.py, dev.py and prod.py
+3. Move the settings.py to settings directory
+4. Rename settings.py to common.py
+5. Now cut paste the required settings to dev.py and prod.py
+** settings/dev.py
+"
+from .common import *
+
+SECRET_KEY = 'django-insecure-hs6j037urx6iav+7#10%-vu4l4f5@@-1_zo)oft4g7$vf2$jmp'
+
+DEBUG = True
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'storefront3',
+        'HOST': 'localhost',
+        'USER': 'root',
+        'PASSWORD': 'Ab@123456'
+    }
+}
+"
+** prod.py
+"
+from .common import *
+import os
+
+SECRET_KEY = os.environ['SECRET_KEY']
+
+DEBUG = False
+
+ALLOWED_HOSTS = []
+"
+
+6. Search for "DJANGO_SETTINGS_MODULE" and change "DJANGO_SETTINGS_MODULE = storefront.settings" to "DJANGO_SETTINGS_MODULE = storefront.settings.dev"
+7. Change "BASE_DIR = Path(__file__).resolve().parent.parent" to "BASE_DIR = Path(__file__).resolve().parent.parent.parent" in common.py
