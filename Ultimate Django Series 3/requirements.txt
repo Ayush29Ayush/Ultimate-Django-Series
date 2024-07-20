@@ -23,6 +23,7 @@ django-celery-results==2.5.1
 django-cors-headers==4.4.0
 django-debug-toolbar==4.4.2
 django-filter==24.2
+django-redis==5.4.0
 django-silk==5.1.0
 django-templated-mail==1.1.1
 django-timezone-field==7.0
@@ -39,6 +40,7 @@ gevent==24.2.1
 geventhttpclient==2.3.1
 gprof2dot==2024.6.6
 greenlet==3.0.3
+gunicorn==22.0.0
 humanize==4.10.0
 idna==3.7
 inflection==0.5.1
@@ -87,5 +89,6 @@ vine==5.1.0
 watchdog==4.0.1
 wcwidth==0.2.13
 Werkzeug==3.0.3
+whitenoise==6.7.0
 zope.event==5.0
 zope.interface==6.4.post2
