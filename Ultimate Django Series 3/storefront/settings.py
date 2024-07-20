@@ -247,6 +247,7 @@ LOGGING = {
         'file': {
             'class': 'logging.FileHandler',
             'filename': 'general.log',
+            'formatter': 'verbose',
         }
     },
     #! Define which apps will use logging
