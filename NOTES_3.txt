@@ -1450,3 +1450,93 @@ MIDDLEWARE = [
     # 'silk.middleware.SilkyMiddleware',
 ]
 "
+
+#! Configuring Logging
+Use logging to diagnose and troubleshoot issues.
+#TODO -> https://betterstack.com/community/guides/logging/how-to-start-logging-with-python/
+
+Add this to settings.py
+** settings.py
+"
+#! Logging configuration
+LOGGING = {
+    #! Version of logging
+    'version': 1,
+    #! disable logging to previous handlers
+    'disable_existing_loggers': False,
+    #! Where to handle and send logging data
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+        }
+    },
+    #! Define which apps will use logging
+    'loggers': {
+        #! For the entire project we use "django"
+        'django': {
+            'handlers': ['console', 'file'], #! For the entire project we want the logs to be sent to "console" and "file"
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'), #! SEVERITY => DEBUG, INFO, WARNING, ERROR, CRITICAL. By default, it is "INFO" here
+        },
+    },
+    #! Formatters for logging
+    'formatters': {
+        #! For detailed structuring of logs
+        'verbose': {
+            # 'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{asctime} ({levelname}) - {name} - {message}',
+            'style': '{', #! '{' means str.format()
+            # 'style': '$', #! '$' means str.template()
+        },
+        #! For simple structuring of logs
+        # 'simple': {
+        #     'format': '{levelname} {message}',
+        #     'style': '{',
+        # },
+    }
+}
+"
+
+#! Logging
+** playground/views.py
+"
+from django.shortcuts import render
+import requests
+import logging
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from rest_framework.views import APIView
+
+# Approach - 1 (Basic)
+# logger = logging.getLogger("playground.views") #! This will make a new logger with name 'playground.views'
+
+# Approach - 2 (Optimized)
+logger = logging.getLogger(
+    __name__
+)  #! This will make a new logger with name 'playground.views' dynamically according to the file name
+
+
+class HelloView(APIView):
+    def get(self, request):
+        try:
+            logger.info("Calling httpbin.org/delay/2")
+            response = requests.get("http://httpbin.org/delay/2")
+            logger.info("Received response from httpbin.org/delay/2")
+            data = response.json()
+        except requests.ConnectionError:
+            logger.critical("httpbin is offline. Could not connect to httpbin.org/delay/2")
+        return render(request, "hello.html", {"name": "Ayush Senapati"})
+
+"
+
+** general.log
+"
+2024-07-20 19:40:54,608 (INFO) - django.utils.autoreload - Watching for file changes with StatReloader
+2024-07-20 19:40:55,074 (WARNING) - silk.profiling.profiler - Cannot execute silk_profile as silk is not installed correctly.
+2024-07-20 19:46:21,385 (INFO) - playground.views - Calling httpbin.org/delay/2
+2024-07-20 19:46:23,965 (INFO) - playground.views - Received response from httpbin.org/delay/2
+"
