@@ -1579,3 +1579,40 @@ ALLOWED_HOSTS = []
 
 6. Search for "DJANGO_SETTINGS_MODULE" and change "DJANGO_SETTINGS_MODULE = storefront.settings" to "DJANGO_SETTINGS_MODULE = storefront.settings.dev"
 7. Change "BASE_DIR = Path(__file__).resolve().parent.parent" to "BASE_DIR = Path(__file__).resolve().parent.parent.parent" in common.py
+
+#! Serving the application with Gunicorn
+1. For production, we need a fast and robust webserver. We can use Gunicorn.
+2. pip install gunicorn
+3. Now we will use the wsgi.py which stands for Web Server Gateway Interface.
+
+"Daphne serves as an ASGI server, primarily handling asynchronous tasks like WebSocket connections. It's used for Django Channels. Daphne does not serve WSGI applications. For synchronous HTTP requests (WSGI), you still need a traditional WSGI server like Gunicorn ."
+
+3. Start the gunicorn server with "gunicorn storefront.wsgi"
+"
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3> gunicorn storefront.wsgi
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "D:\Ultimate-Django-Series\venv\Scripts\gunicorn.exe\__main__.py", line 4, in <module>
+  File "D:\Ultimate-Django-Series\venv\Lib\site-packages\gunicorn\app\wsgiapp.py", line 9, in <module>  
+    from gunicorn.app.base import Application
+  File "D:\Ultimate-Django-Series\venv\Lib\site-packages\gunicorn\app\base.py", line 11, in <module>    
+    from gunicorn import util
+  File "D:\Ultimate-Django-Series\venv\Lib\site-packages\gunicorn\util.py", line 8, in <module>
+    import fcntl
+ModuleNotFoundError: No module named 'fcntl'
+"
+* We get this error because gunicorn is only supported for Unix based systems like Linux and macOS. 
+* For Windows, we can use it with Windows Subsystem for Linux or use a WSGI server compatible with Windows, such as waitress, for development purposes.
+
+#! Serving the application with waitress
+1. pip install waitress
+2. To start the application with waitress, run "waitress-serve --port=8000 storefront.wsgi:application"
+"
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3> waitress-serve --port=8000 storefront.wsgi:application
+Serving on http://0.0.0.0:8000
+Cannot execute silk_profile as silk is not installed correctly.
+Calling httpbin.org/delay/2
+Received response from httpbin.org/delay/2
+"
+#TODO Refer => https://docs.pylonsproject.org/projects/waitress/en/latest/usage.html
