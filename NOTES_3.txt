@@ -1161,7 +1161,7 @@ import requests
 
 def say_hello(request):
     #! This will get you the response after 10 seconds of request
-    requests.get("http://httpbin.org/delay/10")
+    requests.get('http://httpbin.org/delay/1')
     return render(request, "hello.html", {"name": "Ayush Senapati"})
 "
 
@@ -1215,7 +1215,7 @@ from django.core.cache import cache
 def say_hello(request):
     key = "httpbin_result"
     if cache.get(key) is None:
-        response = requests.get("http://httpbin.org/delay/2")
+        response = requests.get('http://httpbin.org/delay/2')
         data = response.json()
         cache.set(key=key, value=data)
         # cache.set(key, data, 60)
@@ -1327,7 +1327,7 @@ GET      /store/products                                                        
 GET      /store/products/:id                                                                  2100   2100   2100   2100   2100   2100   2100   2100   2100   2100   2100     63
 --------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
          Aggregated                                                                             21   2100   2100   2100   2100   2100   2100   2100   2700   2700   2700    150
-"
+""
 
 * We can compare the average response time and median in before and after tables for /playground/hello/ and see the level of impact received by caching.
 
@@ -1498,8 +1498,7 @@ LOGGING = {
         # },
     }
 }
-"
-
+""
 #! Logging
 ** playground/views.py
 "
@@ -1539,7 +1538,7 @@ class HelloView(APIView):
 2024-07-20 19:40:55,074 (WARNING) - silk.profiling.profiler - Cannot execute silk_profile as silk is not installed correctly.
 2024-07-20 19:46:21,385 (INFO) - playground.views - Calling httpbin.org/delay/2
 2024-07-20 19:46:23,965 (INFO) - playground.views - Received response from httpbin.org/delay/2
-"
+""
 
 #! Managing Development and Production Settings
 1. To differentiate between development and production settings, we will create settings directory inside project directory.
@@ -1616,3 +1615,149 @@ Calling httpbin.org/delay/2
 Received response from httpbin.org/delay/2
 "
 #TODO Refer => https://docs.pylonsproject.org/projects/waitress/en/latest/usage.html
+
+#* Section - 8 ( Deployment )
+Hosting Options - 
+a) Virtual Private Server (VPS)
+b) Platform as a Service (PaaS)
+* Heroku (We will use this)
+* Digital Ocean
+* AWS
+* MS Azure
+* Google Cloud
+
+#! Adding Project to Git
+1. git init
+2. git add .
+3. git commit -m "initial commit"
+4. git log --oneline
+5. git push -u origin main
+
+#! Getting Started with Heroku
+1. Create a Heroku account
+2. Download the Heroku CLI from "https://devcenter.heroku.com/articles/heroku-cli"
+3. Run "heroku --version"
+4. Run "heroku login"
+"
+PS D:\Ultimate-Django-Series\Ultimate Django Series 3> heroku --version
+heroku/9.0.0 win32-x64 node-v16.20.2
+PS D:\Ultimate-Django-Series\Ultimate Django Series 3> heroku login
+heroku: Press any key to open up the browser to login or q to exit:
+Opening browser to https://cli-auth.heroku.com/auth/cli/browser/28676797-bb14-4cfd-a995-c1faf3fafbf6?requestor=SFMyNTY.g2gDbQAAAA00OS4zNy4xMTQuMjQ0bgYAOGof1JABYgABUYA.Ge6IupZV9hhPpCThnvzaab1rhWNxBVQSsFfmc61GcfI
+Logging in... done
+Logged in as ayush.senapati@cozentus.com
+"
+
+#! Creating a heroku App
+1. Create a new heroku app using "heroku create <app-name>"
+"
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3> heroku create senpaibuys-prod
+Creating ⬢ senpaibuys-prod... !
+    Error: HTTP Error 503 for POST https://api.heroku.com/apps
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8">
+        <title>Application Error</title>
+        <style media="screen">
+          html,body,iframe {
+            margin: 0;
+            padding: 0;
+          }
+
+          html,body {
+            height: 100%;
+            overflow: hidden;
+          }
+
+          iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <iframe
+    src="https://www.herokucdn.com/error-pages/application-error.html"></iframe>
+      </body>
+    </html>
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3>
+
+(venv) PS D:\Ultimate-Django-Series\Ultimate Django Series 3> heroku create senpaibuys-prod
+Creating ⬢ senpaibuys-prod... !
+ »   Error: To create an app, verify your account by adding payment information. Verify now
+ »    at https://heroku.com/verify Learn more at
+ »   https://devcenter.heroku.com/articles/account-verification
+ »
+ »   Error ID: verification_required
+"
+"
+We are getting this error because heroku is not free anymore
+
+** storefront/settings/prod.py
+"
+from .common import *
+import os
+
+SECRET_KEY = os.environ['SECRET_KEY']
+
+DEBUG = False
+
+# ALLOWED_HOSTS = ['senpaibuys-prod.herokuapp.com'] #! This would have been the allowed host in production for heroku app
+ALLOWED_HOSTS = []
+"
+
+#! Setting Environment Variables
+1. We need to create a SECRET_KEY for production 
+2. Go to "djecrety.ir" and generate a secret key
+3. Run "heroku config:set SECRET_KEY=<SECRET_KEY>"
+4. Run "heroku config:set DJANGO_SETTINGS_MODULE=storefront.settings.prod"
+5. Run "heroku config:set DEBUG=False"
+
+#! Creating a Proc file (needed only with Heroku)
+1. Create a "Procfile" in the root directory
+** Procfile
+"
+release: python manage.py migrate
+web: gunicorn storefront.wsgi
+worker: celery -A storefront.celery worker --pool=solo -l info
+"
+
+#! Provisioning a MySQL Database
+1. Go to "dashboard.heroku.com/apps" to see your apps.
+2. Click on your app
+3. Click "Configure Add-ons"
+4. Search for "ClearDB MySQL" 
+5. Now in the terminal, type "heroku config" to see your config variables
+6. You will see a new env variable called "CLEARDB_DATABASE_URL"
+7. Copy the value of "CLEARDB_DATABASE_URL" before the part where ?reconnect=true is present
+8. Now type "heroku config:set DATABASE_URL=<YOUR-CLEARDB-DATABASE-URL>"
+
+9. Now to set the database parameters in prod, we will use package => "dj-database-url"
+10. pip install dj-database-url
+11. Now update your prod.py
+** storefront/settings/prod.py
+"
+from .common import *
+import dj_database_url
+import os
+
+SECRET_KEY = os.environ['SECRET_KEY']
+
+DEBUG = False
+
+ALLOWED_HOSTS = []
+
+DATABASES = {
+    'default': dj_database_url.config()
+}
+"
+
+#! Provisioning a Redis Instance
+1. Now again go to "dashboard.heroku.com/apps" to see your apps.
+2. Configure Add-ons
+3. Search for "Heroku Redis"
+4. In the terminal, type "heroku config" to see your config variables
+5. We will see a new env variable called "REDIS_URL"
