@@ -1761,3 +1761,78 @@ DATABASES = {
 3. Search for "Heroku Redis"
 4. In the terminal, type "heroku config" to see your config variables
 5. We will see a new env variable called "REDIS_URL"
+
+#! Provisioning a SMTP Server
+1. Go to "dashboard.heroku.com/apps" to see your apps.
+2. Click on your app
+3. Click "Configure Add-ons"
+4. Search for "Mailgun"
+5. Now in the terminal, type "heroku config" to see your config variables
+6. You will see "MAILGUN_PUBLIC_KEY", "MAILGUN_SMTP_LOGIN", "MAILGUN_SMTP_PASSWORD", "MAILGUN_SMTP_SERVER", "MAILGUN_SMTP_PORT"
+7. Make changes in prod.py
+"
+from .common import *
+import dj_database_url
+import os
+
+SECRET_KEY = os.environ['SECRET_KEY']
+
+DEBUG = False
+
+ALLOWED_HOSTS = []
+
+DATABASES = {
+    'default': dj_database_url.config()
+}
+
+REDIS_URL = os.environ['REDIS_URL']
+
+CELERY_BROKER_URL = REDIS_URL
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "TIMEOUT": 10 * 60, #! 10 minutes
+    }
+}
+
+EMAIL_HOST = os.environ['MAILGUN_SMTP_SERVER']
+EMAIL_HOST_USER = os.environ['MAILGUN_SMTP_LOGIN']
+EMAIL_HOST_PASSWORD = os.environ['MAILGUN_SMTP_PASSWORD']
+EMAIL_PORT = os.environ['MAILGUN_SMTP_PORT']
+"
+
+#! Deploying the Application
+* install heroku-postgres from the configure add-ons
+* type "heroku config", you will see HEROKU_POSTGRESQL_NAVY_URL
+* copy the value of HEROKU_POSTGRESQL_NAVY_URL to DATABASE_URL
+* type "heroku config:set DATABASE_URL=<YOUR-HEROKU_POSTGRESQL_NAVY_URL>"
+
+1. git add .
+2. git commit -m "commit message"
+3. git push origin master
+4. git remote -vv 
+5. git push heroku master
+
+* To view the deployed files => heroku run bash
+* To view the logs => heroku logs --tail
+* To create a superuser => heroku run python manage.py createsuperuser
+
+* heroku open => open the app in a browser
+
+#! Populating the Database
+Approach - 1
+1. We will use our custom command "seed_db" present in store/management/commands/seed_db.py
+2. Type "heroku run python manage.py seed_db"
+Approach - 2
+1. heroku config:get DATABASE_URL
+2. Copy the value of DATABASE_URL
+3. Go to your database IDE
+4. Open a new datasource or new connection
+5. connection type => url only
+6. In the URL field, paste the value of DATABASE_URL => jdbc:<DATABASE_URL>
+7. Now you can populate the database
