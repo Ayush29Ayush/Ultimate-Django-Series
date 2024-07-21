@@ -1836,3 +1836,41 @@ Approach - 2
 5. connection type => url only
 6. In the URL field, paste the value of DATABASE_URL => jdbc:<DATABASE_URL>
 7. Now you can populate the database
+
+#! Dockerizing the Application
+* Services we need to run the application:
+a) MySQL (For database)
+b) Redis (For caching)
+c) Celery (For background tasks)
+d) Smtp4Dev (For sending emails)
+e) Flower (For monitoring)
+f) Silk (For profiling)
+g) Locust (For performance testing)
+
+1. Go to task manager then to services and stop mysql service because we will be running it through docker so we need the port free
+2. Create 4 files in the root directory
+a) docker-compose.yml
+b) Dockerfile
+c) docker-entrypoint.sh
+d) wait-for-it.sh
+
+3. Run command => docker-compose up --build -d 
+"
+PS D:\Ultimate-Django-Series\Ultimate Django Series 3> docker-compose up --build
+time="2024-07-21T20:46:12+05:30" level=warning msg="D:\\Ultimate-Django-Series\\Ultimate Django Series 3\\docker-compose.yml: `version` is obsolete"
+error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.46/containers/json?all=1&filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dultimatedjangoseries3%22%3Atrue%7D%7D": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+PS D:\Ultimate-Django-Series\Ultimate Django Series 3> docker-compose up --build
+time="2024-07-21T20:47:11+05:30" level=warning msg="D:\\Ultimate-Django-Series\\Ultimate Django Series 3\\docker-compose.yml: `version` is obsolete"
+[+] Running 20/3
+ ✔ smtp4dev Pulled                                                                                                                                                                                                             2.7s 
+ - mysql [⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿] 166.7MB / 166.8MB Pulling                                                                                                                                                                              28.3s 
+ ✔ redis Pulled                                                                                                                                                                                                                8.0s 
+""
+4. To check logs from our web server => docker-compose logs web 
+5. To check logs from test server => docker-compose logs tests
+6. docker-compose logs -f tests => to see the logs in real time
+7. docker-compose down => to stop all the containers
+8. To run commands => docker-compose run web bash
+9. To seed the database => docker-compose run web python manage.py seed_db
+
+-------------------------------------------------------------------------------------------THE END-------------------------------------------------------------------------------------------
