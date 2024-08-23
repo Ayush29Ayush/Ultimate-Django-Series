@@ -1874,3 +1874,20 @@ time="2024-07-21T20:47:11+05:30" level=warning msg="D:\\Ultimate-Django-Series\\
 9. To seed the database => docker-compose run web python manage.py seed_db
 
 -------------------------------------------------------------------------------------------THE END-------------------------------------------------------------------------------------------
+
+Ques) DRF: When to use Viewsets vs Generic Views vs APIView vs Function Based Views?
+
+I'm a bit confused as to when or under what circumstances would it be best to use Viewset vs Generic Views (ListCreateAPIView, RetrieveUpdateDestroyAPIView) vs APIView vs Function based views.
+Does anyone have a good rule of thumb?
+
+Ans) 
+"""
+Because I’ve been very annoyed at not being able to find a concrete answer on this before, I’ll share my experiences here.
+
+* if your API will have to do a lot of basic CRUD operations (straight read,update,delete of your models), go for the ViewSets so you won’t have to write all the code for the basic stuff.
+
+* if you require more custom work, go for either Generic Views or APIViews. The former may give some benefits while working with 3rd party libraries, but the more custom work you want to do the more I actually like to use APIViews. You will encounter a moment where the extra abstraction layer a Generic View gives you will start to work against you more than it actually saves you in time. From this point onwards, it makes more sense (to me) to just use APIViews to get more control over what is supposed to happen. Also - APIViews tend to be more readable for people less experienced with Django projects.
+
+* I wouldn’t advice anyone to go the functional route at all anymore. The class based views provide too many benefits!
+
+"""
